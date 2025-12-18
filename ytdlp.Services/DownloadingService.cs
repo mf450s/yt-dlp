@@ -34,7 +34,7 @@ namespace ytdlp.Services
             string[] args =
             [
                 url,
-                $"--config-file", wholeConfigPath
+                $"--config-locations", wholeConfigPath
             ];
 
             // Create a process start info object
@@ -51,7 +51,7 @@ namespace ytdlp.Services
         }
         private string GetWholeConfigPath(string configName)
         {
-            return $"./configs/{configName}.json";
+            return $"../configs/{configName}.conf";
         }
     }
 }
