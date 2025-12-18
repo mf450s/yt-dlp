@@ -5,14 +5,17 @@ using ytdlp.Services.Interfaces;
 
 namespace ytdlp.Services
 {
-    public class DownloadingService : IDownloadingService
+    public class DownloadingService(IConfigsServices _configsServices, IProcessFactory? _processFactory = null) : IDownloadingService
     {
+        private readonly IConfigsServices configsService = _configsServices;
+        private readonly IProcessFactory processFactory = _processFactory ?? new ProcessFactory();
         public async Task TryDownloadingFromURL(string url, string configFile)
         {
-            string wholeConfigPath = GetWholeConfigPath(configFile);
+            string wholeConfigPath = configsService.GetWholeConfigPath(configFile);
             ProcessStartInfo startInfo = await GetProcessStartInfoAsync(url, wholeConfigPath);
             // Start the process
-            using Process process = new() { StartInfo = startInfo };
+            using IProcess process = processFactory.CreateProcess();
+            process.StartInfo = startInfo;
             process.Start();
 
             // Read the output and error streams
@@ -28,7 +31,7 @@ namespace ytdlp.Services
             Console.WriteLine("Errors:");
             Console.WriteLine(error);
         }
-        private async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath)
+        internal async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath)
         {
             // Construct the command and arguments for yt-dlp
             string[] args =
@@ -48,10 +51,6 @@ namespace ytdlp.Services
                 CreateNoWindow = true
             };
             return startInfo;
-        }
-        private string GetWholeConfigPath(string configName)
-        {
-            return $"../configs/{configName}.conf";
         }
     }
 }

@@ -20,6 +20,7 @@ builder.Services.AddCors(options =>
 
 // Add DI for IDownloadingService
 builder.Services.AddScoped<IDownloadingService, DownloadingService>();
+builder.Services.AddScoped<IConfigsServices, ConfigsServices>();
 
 var app = builder.Build();
 
