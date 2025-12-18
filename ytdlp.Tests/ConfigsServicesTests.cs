@@ -7,6 +7,7 @@ namespace ytdlp.Tests.Services;
 
 public class ConfigsServicesTests
 {
+    #region GetConfigPath
     [Fact]
     public void GetWholeConfigPath_ShouldReturnCorrectPath()
     {
@@ -38,7 +39,9 @@ public class ConfigsServicesTests
         // Assert
         result.Should().Be($"../configs/{configName}.conf");
     }
+    #endregion
 
+    #region GetAllConfigNames
     [Fact]
     public void GetAllConfigNames_WithMultipleConfigs_ShouldReturnAllNames()
     {
@@ -114,7 +117,9 @@ public class ConfigsServicesTests
         result.Should().Contain("test");
         result.Should().NotContain("test.conf");
     }
+    #endregion
 
+    #region GetConfigContent
     [Fact]
     public void GetConfigContentByName_WhenFileExists_ShouldReturnContentSuccessfully()
     {
@@ -190,7 +195,8 @@ public class ConfigsServicesTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
-
+    #endregion
+    #region DeleteConfig
     [Fact]
     public async Task DeleteConfigByName_WhenFileExists_ShouldDeleteFile()
     {
@@ -265,7 +271,9 @@ public class ConfigsServicesTests
         mockFileSystem.File.Exists("../configs/video.conf").Should().BeFalse();
         mockFileSystem.File.Exists("../configs/playlist.conf").Should().BeTrue();
     }
+    #endregion
 
+    #region CreateConfig
     [Fact]
     public void CreateNewConfig_WhenFileDoesNotExist_ShouldCreateFileSuccessfully()
     {
@@ -398,4 +406,5 @@ public class ConfigsServicesTests
         var actualContent = mockFileSystem.File.ReadAllText("../configs/multiline.conf");
         actualContent.Should().Be(multilineContent);
     }
+    #endregion
 }
