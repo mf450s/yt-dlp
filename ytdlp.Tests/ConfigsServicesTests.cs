@@ -275,7 +275,7 @@ public class ConfigsServicesTests
 
     #region CreateConfig
     [Fact]
-    public void CreateNewConfig_WhenFileDoesNotExist_ShouldCreateFileSuccessfully()
+    public async Task CreateNewConfig_WhenFileDoesNotExist_ShouldCreateFileSuccessfully()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
@@ -285,7 +285,7 @@ public class ConfigsServicesTests
         var configContent = "# New Config\n--format bestvideo";
 
         // Act
-        var result = sut.CreateNewConfig(configName, configContent);
+        var result = await sut.CreateNewConfigAsync(configName, configContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -295,7 +295,7 @@ public class ConfigsServicesTests
     }
 
     [Fact]
-    public void CreateNewConfig_WhenFileDoesNotExist_ShouldWriteContentCorrectly()
+    public async Task CreateNewConfig_WhenFileDoesNotExist_ShouldWriteContentCorrectly()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
@@ -305,7 +305,7 @@ public class ConfigsServicesTests
         var expectedContent = "# Music Config\n--extract-audio\n--audio-format mp3";
 
         // Act
-        var result = sut.CreateNewConfig(configName, expectedContent);
+        var result = await sut.CreateNewConfigAsync(configName, expectedContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -314,7 +314,7 @@ public class ConfigsServicesTests
     }
 
     [Fact]
-    public void CreateNewConfig_WhenFileAlreadyExists_ShouldReturnFailure()
+    public async Task CreateNewConfig_WhenFileAlreadyExists_ShouldReturnFailureAsync()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
@@ -324,7 +324,7 @@ public class ConfigsServicesTests
         var sut = new ConfigsServices(mockFileSystem);
 
         // Act
-        var result = sut.CreateNewConfig("existing", "# New Content");
+        var result = await sut.CreateNewConfigAsync("existing", "# New Content");
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -333,7 +333,7 @@ public class ConfigsServicesTests
     }
 
     [Fact]
-    public void CreateNewConfig_WhenFileAlreadyExists_ShouldNotModifyExistingFile()
+    public async Task CreateNewConfig_WhenFileAlreadyExists_ShouldNotModifyExistingFileAsync()
     {
         // Arrange
         var originalContent = "# Original Config";
@@ -344,7 +344,7 @@ public class ConfigsServicesTests
         var sut = new ConfigsServices(mockFileSystem);
 
         // Act
-        var result = sut.CreateNewConfig("existing", "# New Content");
+        var result = await sut.CreateNewConfigAsync("existing", "# New Content");
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -356,7 +356,7 @@ public class ConfigsServicesTests
     [InlineData("music", "# Music\n--extract-audio")]
     [InlineData("video", "# Video\n--format bestvideo")]
     [InlineData("playlist", "# Playlist\n--yes-playlist")]
-    public void CreateNewConfig_WithDifferentNamesAndContent_ShouldCreateCorrectly(string configName, string configContent)
+    public async Task CreateNewConfig_WithDifferentNamesAndContent_ShouldCreateCorrectlyAsync(string configName, string configContent)
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
@@ -364,7 +364,7 @@ public class ConfigsServicesTests
         var sut = new ConfigsServices(mockFileSystem);
 
         // Act
-        var result = sut.CreateNewConfig(configName, configContent);
+        var result = await sut.CreateNewConfigAsync(configName, configContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -373,7 +373,7 @@ public class ConfigsServicesTests
     }
 
     [Fact]
-    public void CreateNewConfig_WithEmptyContent_ShouldCreateEmptyFile()
+    public async Task CreateNewConfig_WithEmptyContent_ShouldCreateEmptyFileAsync()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
@@ -381,7 +381,7 @@ public class ConfigsServicesTests
         var sut = new ConfigsServices(mockFileSystem);
 
         // Act
-        var result = sut.CreateNewConfig("empty", "");
+        var result = await sut.CreateNewConfigAsync("empty", "");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -390,7 +390,7 @@ public class ConfigsServicesTests
     }
 
     [Fact]
-    public void CreateNewConfig_WithMultilineContent_ShouldPreserveFormatting()
+    public async Task CreateNewConfig_WithMultilineContent_ShouldPreserveFormattingAsync()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
@@ -399,12 +399,145 @@ public class ConfigsServicesTests
         var multilineContent = "# Config Header\n--format bestvideo\n--output '%(title)s'\n# Comment";
 
         // Act
-        var result = sut.CreateNewConfig("multiline", multilineContent);
+        var result = await sut.CreateNewConfigAsync("multiline", multilineContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         var actualContent = mockFileSystem.File.ReadAllText("../configs/multiline.conf");
         actualContent.Should().Be(multilineContent);
+    }
+    #endregion
+
+    #region PatchConfig
+    [Fact]
+    public async Task SetConfigContentAsync_WhenFileExists_ShouldReturnSuccess()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+        { "../configs/music.conf", new MockFileData("# Old Content") }
+    });
+        var sut = new ConfigsServices(mockFileSystem);
+        var newContent = "# Updated Content\n--format bestvideo";
+
+        // Act
+        var result = await sut.SetConfigContentAsync("music", newContent);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SetConfigContentAsync_WhenFileExists_ShouldUpdateContent()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+        { "../configs/music.conf", new MockFileData("# Old Content") }
+    });
+        var sut = new ConfigsServices(mockFileSystem);
+        var newContent = "# Updated Content\n--extract-audio\n--audio-format mp3";
+
+        // Act
+        await sut.SetConfigContentAsync("music", newContent);
+
+        // Assert
+        var actualContent = mockFileSystem.File.ReadAllText("../configs/music.conf");
+        actualContent.Should().Be(newContent);
+    }
+
+    [Fact]
+    public async Task SetConfigContentAsync_WhenFileDoesNotExist_ShouldReturnFailure()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        mockFileSystem.AddDirectory("../configs/");
+        var sut = new ConfigsServices(mockFileSystem);
+
+        // Act
+        var result = await sut.SetConfigContentAsync("nonexistent", "# New Content");
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle();
+        result.Errors[0].Message.Should().Contain("doesnt exists");
+        result.Errors[0].Message.Should().Contain("nonexistent");
+    }
+
+    [Fact]
+    public async Task SetConfigContentAsync_WhenFileDoesNotExist_ShouldNotCreateFile()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        mockFileSystem.AddDirectory("../configs/");
+        var sut = new ConfigsServices(mockFileSystem);
+
+        // Act
+        await sut.SetConfigContentAsync("nonexistent", "# New Content");
+
+        // Assert
+        mockFileSystem.File.Exists("../configs/nonexistent.conf").Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("music", "# Music Config\n--extract-audio")]
+    [InlineData("video", "# Video Config\n--format bestvideo")]
+    [InlineData("playlist", "# Playlist Config\n--yes-playlist")]
+    public async Task SetConfigContentAsync_WithDifferentConfigs_ShouldUpdateCorrectly(string configName, string newContent)
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+        { $"../configs/{configName}.conf", new MockFileData("# Old Content") }
+    });
+        var sut = new ConfigsServices(mockFileSystem);
+
+        // Act
+        var result = await sut.SetConfigContentAsync(configName, newContent);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var actualContent = mockFileSystem.File.ReadAllText($"../configs/{configName}.conf");
+        actualContent.Should().Be(newContent);
+    }
+
+    [Fact]
+    public async Task SetConfigContentAsync_WithEmptyContent_ShouldOverwriteWithEmpty()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+        { "../configs/test.conf", new MockFileData("# Original Content") }
+    });
+        var sut = new ConfigsServices(mockFileSystem);
+
+        // Act
+        var result = await sut.SetConfigContentAsync("test", "");
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        mockFileSystem.File.ReadAllText("../configs/test.conf").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SetConfigContentAsync_ShouldCompletelyReplaceOldContent()
+    {
+        // Arrange
+        var originalContent = "# Very Long Original Content\n--option1\n--option2\n--option3";
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+        { "../configs/test.conf", new MockFileData(originalContent) }
+    });
+        var sut = new ConfigsServices(mockFileSystem);
+        var newContent = "# Short";
+
+        // Act
+        await sut.SetConfigContentAsync("test", newContent);
+
+        // Assert
+        var actualContent = mockFileSystem.File.ReadAllText("../configs/test.conf");
+        actualContent.Should().Be(newContent);
+        actualContent.Should().NotContain("option1");
     }
     #endregion
 }

@@ -48,7 +48,7 @@ public class ConfigsServices(IFileSystem fileSystem) : IConfigsServices
         }
         else return Result.Fail("File already exists");
     }
-    public Result<string> CreateNewConfig(string name, string configContent)
+    public async Task<Result<string>> CreateNewConfigAsync(string name, string configContent)
     {
         string newPath = GetWholeConfigPath(name);
         if (_fileSystem.File.Exists(newPath))
@@ -57,9 +57,27 @@ public class ConfigsServices(IFileSystem fileSystem) : IConfigsServices
         }
         else
         {
-            using var writer = _fileSystem.File.CreateText(newPath);
-            writer.Write(configContent);
+            await WriteContentToFile(newPath, configContent);
             return Result.Ok($"Config file '{name}' created successfully.");
         }
+    }
+
+    public async Task<Result<string>> SetConfigContentAsync(string name, string configContent)
+    {
+        string path = GetWholeConfigPath(name);
+        if (_fileSystem.File.Exists(path))
+        {
+            await WriteContentToFile(path, configContent);
+            return Result.Ok();
+        }
+        else
+            return Result.Fail($"File with name '{name}' doesnt exists");
+        
+    }
+
+    internal async Task WriteContentToFile(string path, string configContent )
+    {
+        await using var writer = _fileSystem.File.CreateText(path);
+        await writer.WriteAsync(configContent);
     }
 }

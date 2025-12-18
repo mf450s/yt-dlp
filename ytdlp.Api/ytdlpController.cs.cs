@@ -38,12 +38,19 @@ namespace ytdlp.Api
             else return NotFound();
         }
         [HttpPost("config/{configName}")]
-        public IActionResult CreateNewConfig(string configName, [FromBody] string configContent)
+        public async Task<IActionResult> CreateNewConfigAsync(string configName, [FromBody] string configContent)
         {
-            Result<string> result = configsServices.CreateNewConfig(configName, configContent);
+            Result<string> result = await configsServices.CreateNewConfigAsync(configName, configContent);
             if (result.IsSuccess)
                 return Created();
             else return Conflict(result.Value);
+        }
+        [HttpPatch("config/{configName}")]
+        public async Task<IActionResult> SetConfigContentAsync(string configName, [FromBody] string configContent)
+        {
+            Result<string> result = await configsServices.SetConfigContentAsync(configName, configContent);
+            if (result.IsSuccess) return Ok(configContent);
+            else return NotFound(configContent);
         }
     }
 }
