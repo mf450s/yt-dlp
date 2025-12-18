@@ -1,6 +1,37 @@
-Ziel: 
-lokal laufender Server, der Webhooks annimmt.
-Webhooks enthalten eine confignamen und eine URL.
-Mithilfe von yt-dlp soll diese URL dann mit der entsprechenden config runtergeladen werden.
-In der config steht der entsprechende Outputfolder usw. drin.
-configs werden in `./configs` gespeichert
+Standard Api Endpoints:
+
+Post: `/api/ytdlp/download?configfilename={name}`
+Body: `videolink`
+Returns: `202`
+Downloads the Video
+
+Get: `/api/ytdlp/config/`
+Returns: List of Names of config files
+
+Get, Patch, Post, Delete, : `/api/ytdlp/config/{configName}`
+Get, edit content of config; Add new or delete config
+
+Standard Directories:
+
+```
+"DownloadDir": "../downloads",
+"ArchiveDir": "../archives",
+"ConfigDir": "../configs"
+```
+
+
+
+---
+Dump:
+
+
+ich rufe yt-dlp als binary auf(glaub ich). Ich konfiguriere halt nen yt-dlp befehl. yt-dlp und seine dependencys sollen mitinstalliert werden. ffmpeg zum beispiel auch. Und ich bekomme irgendne jsruntime warnung und irgendwas von "Deno" steht da dann auch bei. Das sollte gefixt werden
+
+
+  "Dirs": {
+    "DownloadDir": "../downloads",
+    "ArchiveDir": "../archives",
+    "ConfigDir": "../configs"
+  }
+
+  - [ ] Command Injektion fixen
