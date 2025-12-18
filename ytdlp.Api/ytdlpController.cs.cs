@@ -11,7 +11,8 @@ namespace ytdlp.Api
         [HttpPost("download")]
         public IActionResult Download([FromBody] string url, [FromQuery] string configfilename)
         {
-            return Ok();
+            downloadingService.TryDownloadingFromURL(url, configfilename);
+            return Accepted();
         }
     }
 }
