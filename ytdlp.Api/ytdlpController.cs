@@ -9,23 +9,23 @@ namespace ytdlp.Api
     public class ytdlpController(IDownloadingService downloadingService, IConfigsServices configsServices) : ControllerBase
     {
         [HttpPost("download")]
-        public IActionResult Download([FromBody] string url, [FromQuery] string configfilename)
+        public IActionResult Download([FromBody] string url, [FromQuery] string confName)
         {
-            downloadingService.TryDownloadingFromURL(url, configfilename);
+            downloadingService.TryDownloadingFromURL(url, confName);
             return Accepted();
         }
         [HttpGet("config")]
-        public List<string> GetConfigFileNames()
+        public List<string> GetAllConfigNames()
         {
             return configsServices.GetAllConfigNames();
         }
         [HttpGet("config/{configName}")]
-        public IActionResult GetConfigByName(string configName)
+        public IActionResult GetConfigContentByName(string configName)
         {
             Result<string> configContent = configsServices.GetConfigContentByName(configName);
             if (configContent.IsFailed)
             {
-                return NotFound(configContent.Errors.First().Message);
+                return NotFound(configContent.Errors[0].Message);
             }
             return Ok(configContent.Value);
         }
