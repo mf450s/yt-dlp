@@ -20,5 +20,15 @@ namespace ytdlp.Api
         {
             return configsServices.GetAllConfigNames();
         }
+        [HttpGet("config/{configName}")]
+        public IActionResult GetConfigByName(string configName)
+        {
+            string configContent = configsServices.GetConfigContent(configName);
+            if (string.IsNullOrEmpty(configContent))
+            {
+                return NotFound($"Configuration file '{configName}' not found.");
+            }
+            return Ok(configContent);
+        }
     }
 }
