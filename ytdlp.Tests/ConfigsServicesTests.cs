@@ -568,10 +568,10 @@ public class ConfigsServicesTests
     #endregion
     #region SplitArguments
 [Theory]
-[InlineData("--format bestvideo", new[] { "--format", "bestvideo" })]
-[InlineData("-o \"file.mp4\"", new[] { "-o", "\"file.mp4\"" })]
-[InlineData("--output '%(title)s.%(ext)s'", new[] { "--output", "'%(title)s.%(ext)s'" })]
-[InlineData("-f best -o output.mp4", new[] { "-f", "best", "-o", "output.mp4" })]
+[InlineData("-o \"file.mp4\" -f best", new[] { "-o \"file.mp4\"", "-f best" })]
+[InlineData("--output '%(title)s.%(ext)s'", new[] { "--output '%(title)s.%(ext)s'" })]
+[InlineData("-f best -o output.mp4", new[] { "-f best", "-o output.mp4" })]
+[InlineData("--format bestvideo", new[] { "--format bestvideo" })]
 public void SplitArguments_WithVariousFormats_ShouldSplitCorrectly(string input, string[] expected)
 {
     // Arrange
@@ -748,11 +748,11 @@ public void FixPathPath_WithTypeAndPath_ShouldAddDownloadFolderToPath()
 }
 
 [Fact]
-public void FixPathPath_WhenConfigFolderAlreadyPresent_ShouldReturnUnchanged()
+public void FixPathPath_WhenDownloadFolderAlreadyPresent_ShouldReturnUnchanged()
 {
     // Arrange
     var sut = GetConfigsServices();
-    var input = $"-P \"{paths.Config}/downloads\"";
+    var input = $"-P \"{paths.Downloads}/downloads\"";
 
     // Act
     var result = sut.FixPathPath(input);

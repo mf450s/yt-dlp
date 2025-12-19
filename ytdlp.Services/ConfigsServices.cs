@@ -182,13 +182,14 @@ public class ConfigsServices(IFileSystem fileSystem, IOptions<PathConfiguration>
             string[] pathParts = pathValue.Split([':'], 2);
             string type = pathParts[0];
             string path = pathParts[1];
+            string newArg = $"{parts[0]} \"{type}:{downloadFolder}{path}\"";
 
-            return $"{parts[0]} \"{type}:{Path.Combine(downloadFolder, path)}\"";
+            return newArg;
         }
         else
         {
-            // No type specified
-            return $"{parts[0]} \"{Path.Combine(downloadFolder, pathValue)}\"";
+            string newArg = $"{parts[0]} \"{downloadFolder}{pathValue}\"";
+            return newArg;
         }
     }
 
