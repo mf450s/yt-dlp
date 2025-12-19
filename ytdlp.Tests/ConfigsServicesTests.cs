@@ -1,27 +1,49 @@
 using System.IO.Abstractions.TestingHelpers;
+using Microsoft.Extensions.Options;
+using ytdlp.Configs;
 using FluentAssertions;
 using ytdlp.Services;
 using FluentResults;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.VisualBasic;
 
 namespace ytdlp.Tests.Services;
+
 [ExcludeFromCodeCoverage]
 public class ConfigsServicesTests
 {
+    #region Helpers
+    private ConfigsServices GetConfigsServices(
+        MockFileSystem? mockFileSystem = null,
+        IOptions<PathConfiguration>? iOptionsPathConfig = null,
+        PathConfiguration? pathConfiguration = null
+        )
+    {
+        mockFileSystem ??= new MockFileSystem();
+
+        iOptionsPathConfig ??= pathConfiguration != null
+            ? Options.Create(pathConfiguration)
+            : Options.Create(paths);
+
+        return new ConfigsServices(mockFileSystem, iOptionsPathConfig);
+    }
+    private readonly PathConfiguration paths = new();
+
+    #endregion
     #region GetConfigPath
     [Fact]
     public void GetWholeConfigPath_ShouldReturnCorrectPath()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
         var configName = "testconfig";
 
         // Act
         var result = sut.GetWholeConfigPath(configName);
 
         // Assert
-        result.Should().Be("../configs/testconfig.conf");
+        result.Should().Be($"{paths.Config}{configName}.conf");
     }
 
     [Theory]
@@ -32,35 +54,35 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetWholeConfigPath(configName);
 
         // Assert
-        result.Should().Be($"../configs/{configName}.conf");
+        result.Should().Be($"{paths.Config}{configName}.conf");
     }
-    #endregion
 
+    #endregion
     #region GetAllConfigNames
     [Fact]
     public void GetAllConfigNames_WithMultipleConfigs_ShouldReturnAllNames()
     {
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { "../configs/music.conf", new MockFileData("") },
-            { "../configs/video.conf", new MockFileData("") },
-            { "../configs/playlist.conf", new MockFileData("") }
-        });
-        var sut = new ConfigsServices(mockFileSystem);
+    {
+        { $"{paths.Config}music.conf", new MockFileData("") },
+        { $"{paths.Config}video.conf", new MockFileData("") },
+        { $"{paths.Config}playlist.conf", new MockFileData("") }
+    });
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetAllConfigNames();
 
         // Assert
         result.Should().HaveCount(3);
-        result.Should().Contain(new[] { "music", "video", "playlist" });
+        result.Should().Contain(["music", "video", "playlist"]);
     }
 
     [Fact]
@@ -68,8 +90,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory(paths.Config);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetAllConfigNames();
@@ -83,13 +105,13 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { "../configs/music.conf", new MockFileData("") },
-            { "../configs/readme.txt", new MockFileData("") },
-            { "../configs/video.conf", new MockFileData("") },
-            { "../configs/backup.bak", new MockFileData("") }
-        });
-        var sut = new ConfigsServices(mockFileSystem);
+    {
+        { $"{paths.Config}music.conf", new MockFileData("") },
+        { $"{paths.Config}readme.txt", new MockFileData("") },
+        { $"{paths.Config}video.conf", new MockFileData("") },
+        { $"{paths.Config}backup.bak", new MockFileData("") }
+    });
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetAllConfigNames();
@@ -106,10 +128,10 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { "../configs/test.conf", new MockFileData("") }
-        });
-        var sut = new ConfigsServices(mockFileSystem);
+    {
+        { $"{paths.Config}test.conf", new MockFileData("") }
+    });
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetAllConfigNames();
@@ -118,6 +140,7 @@ public class ConfigsServicesTests
         result.Should().Contain("test");
         result.Should().NotContain("test.conf");
     }
+
     #endregion
 
     #region GetConfigContent
@@ -128,9 +151,9 @@ public class ConfigsServicesTests
         var expectedContent = "--format bestvideo+bestaudio\n--output '%(title)s.%(ext)s'";
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/music.conf", new MockFileData(expectedContent) }
+        { $"{paths.Config}music.conf", new MockFileData(expectedContent) }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetConfigContentByName("music");
@@ -145,8 +168,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory(paths.Config);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetConfigContentByName("nonexistent");
@@ -155,7 +178,7 @@ public class ConfigsServicesTests
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle();
         result.Errors[0].Message.Should().Contain("Config file not found");
-        result.Errors[0].Message.Should().Contain("../configs/nonexistent.conf");
+        result.Errors[0].Message.Should().Contain($"{paths.Config}nonexistent.conf");
     }
 
     [Theory]
@@ -167,9 +190,9 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { $"../configs/{configName}.conf", new MockFileData(expectedContent) }
+        { $"{paths.Config}{configName}.conf", new MockFileData(expectedContent) }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetConfigContentByName(configName);
@@ -185,9 +208,9 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/empty.conf", new MockFileData("") }
+        { $"{paths.Config}empty.conf", new MockFileData("") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = sut.GetConfigContentByName("empty");
@@ -196,6 +219,7 @@ public class ConfigsServicesTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
+
     #endregion
     #region DeleteConfig
     [Fact]
@@ -204,15 +228,15 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/music.conf", new MockFileData("# Music Config") }
+        { $"{paths.Config}music.conf", new MockFileData("# Music Config") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         sut.DeleteConfigByName("music");
 
         // Assert
-        mockFileSystem.File.Exists("../configs/music.conf").Should().BeFalse();
+        mockFileSystem.File.Exists($"{paths.Config}music.conf").Should().BeFalse();
     }
 
     [Theory]
@@ -224,17 +248,17 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { $"../configs/{configName}.conf", new MockFileData("# Config Content") },
-        { "../configs/other.conf", new MockFileData("# Other Config") }
+        { $"{paths.Config}{configName}.conf", new MockFileData("# Config Content") },
+        { $"{paths.Config}other.conf", new MockFileData("# Other Config") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         sut.DeleteConfigByName(configName);
 
         // Assert
-        mockFileSystem.File.Exists($"../configs/{configName}.conf").Should().BeFalse();
-        mockFileSystem.File.Exists("../configs/other.conf").Should().BeTrue();
+        mockFileSystem.File.Exists($"{paths.Config}{configName}.conf").Should().BeFalse();
+        mockFileSystem.File.Exists($"{paths.Config}other.conf").Should().BeTrue();
     }
 
     [Fact]
@@ -242,8 +266,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory(paths.Config);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         Func<Task> act = async () => sut.DeleteConfigByName("nonexistent");
@@ -258,20 +282,21 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/music.conf", new MockFileData("# Music") },
-        { "../configs/video.conf", new MockFileData("# Video") },
-        { "../configs/playlist.conf", new MockFileData("# Playlist") }
+        { $"{paths.Config}music.conf", new MockFileData("# Music") },
+        { $"{paths.Config}video.conf", new MockFileData("# Video") },
+        { $"{paths.Config}playlist.conf", new MockFileData("# Playlist") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         sut.DeleteConfigByName("video");
 
         // Assert
-        mockFileSystem.File.Exists("../configs/music.conf").Should().BeTrue();
-        mockFileSystem.File.Exists("../configs/video.conf").Should().BeFalse();
-        mockFileSystem.File.Exists("../configs/playlist.conf").Should().BeTrue();
+        mockFileSystem.File.Exists($"{paths.Config}music.conf").Should().BeTrue();
+        mockFileSystem.File.Exists($"{paths.Config}video.conf").Should().BeFalse();
+        mockFileSystem.File.Exists($"{paths.Config}playlist.conf").Should().BeTrue();
     }
+
     #endregion
 
     #region CreateConfig
@@ -280,8 +305,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
         var configName = "newconfig";
         var configContent = "# New Config\n--format bestvideo";
 
@@ -292,7 +317,7 @@ public class ConfigsServicesTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Contain("created successfully");
         result.Value.Should().Contain(configName);
-        mockFileSystem.File.Exists("../configs/newconfig.conf").Should().BeTrue();
+        mockFileSystem.File.Exists($"{paths.Config}newconfig.conf").Should().BeTrue();
     }
 
     [Fact]
@@ -300,8 +325,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
         var configName = "music";
         var expectedContent = "# Music Config\n--extract-audio\n--audio-format mp3";
 
@@ -310,7 +335,7 @@ public class ConfigsServicesTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var actualContent = mockFileSystem.File.ReadAllText("../configs/music.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}music.conf");
         actualContent.Should().Be(expectedContent);
     }
 
@@ -320,9 +345,9 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/existing.conf", new MockFileData("# Existing Config") }
+        { $"{paths.Config}existing.conf", new MockFileData("# Existing Config") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.CreateNewConfigAsync("existing", "# New Content");
@@ -340,16 +365,16 @@ public class ConfigsServicesTests
         var originalContent = "# Original Config";
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/existing.conf", new MockFileData(originalContent) }
+        { $"{paths.Config}existing.conf", new MockFileData(originalContent) }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.CreateNewConfigAsync("existing", "# New Content");
 
         // Assert
         result.IsFailed.Should().BeTrue();
-        var actualContent = mockFileSystem.File.ReadAllText("../configs/existing.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}existing.conf");
         actualContent.Should().Be(originalContent);
     }
 
@@ -361,16 +386,16 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.CreateNewConfigAsync(configName, configContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        mockFileSystem.File.Exists($"../configs/{configName}.conf").Should().BeTrue();
-        mockFileSystem.File.ReadAllText($"../configs/{configName}.conf").Should().Be(configContent);
+        mockFileSystem.File.Exists($"{paths.Config}{configName}.conf").Should().BeTrue();
+        mockFileSystem.File.ReadAllText($"{paths.Config}{configName}.conf").Should().Be(configContent);
     }
 
     [Fact]
@@ -378,16 +403,16 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.CreateNewConfigAsync("empty", "");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        mockFileSystem.File.Exists("../configs/empty.conf").Should().BeTrue();
-        mockFileSystem.File.ReadAllText("../configs/empty.conf").Should().BeEmpty();
+        mockFileSystem.File.Exists($"{paths.Config}empty.conf").Should().BeTrue();
+        mockFileSystem.File.ReadAllText($"{paths.Config}empty.conf").Should().BeEmpty();
     }
 
     [Fact]
@@ -395,8 +420,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
         var multilineContent = "# Config Header\n--format bestvideo\n--output '%(title)s'\n# Comment";
 
         // Act
@@ -404,7 +429,7 @@ public class ConfigsServicesTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var actualContent = mockFileSystem.File.ReadAllText("../configs/multiline.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}multiline.conf");
         actualContent.Should().Be(multilineContent);
     }
     #endregion
@@ -416,9 +441,9 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/music.conf", new MockFileData("# Old Content") }
+        { $"{paths.Config}music.conf", new MockFileData("# Old Content") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
         var newContent = "# Updated Content\n--format bestvideo";
 
         // Act
@@ -434,16 +459,16 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/music.conf", new MockFileData("# Old Content") }
+        { $"{paths.Config}music.conf", new MockFileData("# Old Content") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
         var newContent = "# Updated Content\n--extract-audio\n--audio-format mp3";
 
         // Act
         await sut.SetConfigContentAsync("music", newContent);
 
         // Assert
-        var actualContent = mockFileSystem.File.ReadAllText("../configs/music.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}music.conf");
         actualContent.Should().Be(newContent);
     }
 
@@ -452,8 +477,8 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.SetConfigContentAsync("nonexistent", "# New Content");
@@ -470,14 +495,14 @@ public class ConfigsServicesTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        mockFileSystem.AddDirectory("../configs/");
-        var sut = new ConfigsServices(mockFileSystem);
+        mockFileSystem.AddDirectory($"{paths.Config}");
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         await sut.SetConfigContentAsync("nonexistent", "# New Content");
 
         // Assert
-        mockFileSystem.File.Exists("../configs/nonexistent.conf").Should().BeFalse();
+        mockFileSystem.File.Exists($"{paths.Config}nonexistent.conf").Should().BeFalse();
     }
 
     [Theory]
@@ -489,16 +514,16 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { $"../configs/{configName}.conf", new MockFileData("# Old Content") }
+        { $"{paths.Config}{configName}.conf", new MockFileData("# Old Content") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.SetConfigContentAsync(configName, newContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var actualContent = mockFileSystem.File.ReadAllText($"../configs/{configName}.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}{configName}.conf");
         actualContent.Should().Be(newContent);
     }
 
@@ -508,16 +533,16 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/test.conf", new MockFileData("# Original Content") }
+        { $"{paths.Config}test.conf", new MockFileData("# Original Content") }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
 
         // Act
         var result = await sut.SetConfigContentAsync("test", "");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        mockFileSystem.File.ReadAllText("../configs/test.conf").Should().BeEmpty();
+        mockFileSystem.File.ReadAllText($"{paths.Config}test.conf").Should().BeEmpty();
     }
 
     [Fact]
@@ -527,18 +552,358 @@ public class ConfigsServicesTests
         var originalContent = "# Very Long Original Content\n--option1\n--option2\n--option3";
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-        { "../configs/test.conf", new MockFileData(originalContent) }
+        { $"{paths.Config}test.conf", new MockFileData(originalContent) }
     });
-        var sut = new ConfigsServices(mockFileSystem);
+        var sut = GetConfigsServices(mockFileSystem);
         var newContent = "# Short";
 
         // Act
         await sut.SetConfigContentAsync("test", newContent);
 
         // Assert
-        var actualContent = mockFileSystem.File.ReadAllText("../configs/test.conf");
+        var actualContent = mockFileSystem.File.ReadAllText($"{paths.Config}test.conf");
         actualContent.Should().Be(newContent);
         actualContent.Should().NotContain("option1");
     }
     #endregion
+    #region SplitArguments
+[Theory]
+[InlineData("--format bestvideo", new[] { "--format", "bestvideo" })]
+[InlineData("-o \"file.mp4\"", new[] { "-o", "\"file.mp4\"" })]
+[InlineData("--output '%(title)s.%(ext)s'", new[] { "--output", "'%(title)s.%(ext)s'" })]
+[InlineData("-f best -o output.mp4", new[] { "-f", "best", "-o", "output.mp4" })]
+public void SplitArguments_WithVariousFormats_ShouldSplitCorrectly(string input, string[] expected)
+{
+    // Arrange
+    var sut = GetConfigsServices();
+
+    // Act
+    var result = sut.SplitArguments(input);
+
+    // Assert
+    result.Should().Equal(expected);
+}
+
+[Fact]
+public void SplitArguments_WithEmptyString_ShouldReturnEmptyList()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+
+    // Act
+    var result = sut.SplitArguments("");
+
+    // Assert
+    result.Should().BeEmpty();
+}
+#endregion
+
+#region CheckAndFixOutputAndPath
+[Theory]
+[InlineData("-o video.mp4")]
+[InlineData("--output video.mp4")]
+public void CheckAndFixOutputAndPath_WithOutputOption_ShouldCallFixOutputPath(string input)
+{
+    // Arrange
+    var sut = GetConfigsServices();
+
+    // Act
+    var result = sut.CheckAndFixOutputAndPath(input);
+
+    // Assert
+    result.Should().Contain(paths.Downloads);
+    result.Should().Contain("video.mp4");
+}
+
+[Theory]
+[InlineData("-P /downloads")]
+[InlineData("--paths home:/downloads")]
+public void CheckAndFixOutputAndPath_WithPathOption_ShouldCallFixPathPath(string input)
+{
+    // Arrange
+    var sut = GetConfigsServices();
+
+    // Act
+    var result = sut.CheckAndFixOutputAndPath(input);
+
+    // Assert
+    result.Should().Contain(paths.Downloads);
+}
+
+[Theory]
+[InlineData("--format bestvideo")]
+[InlineData("-f best")]
+[InlineData("# comment")]
+public void CheckAndFixOutputAndPath_WithoutOutputOrPath_ShouldReturnUnchanged(string input)
+{
+    // Arrange
+    var sut = GetConfigsServices();
+
+    // Act
+    var result = sut.CheckAndFixOutputAndPath(input);
+
+    // Assert
+    result.Should().Be(input);
+}
+#endregion
+
+#region FixOutputPath
+[Fact]
+public void FixOutputPath_ShouldAddConfigFolderIfMissing()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "-o video.mp4";
+
+    // Act
+    var result = sut.FixOutputPath(input);
+
+    // Assert
+    result.Should().StartWith("-o \"");
+    result.Should().Contain(paths.Downloads);
+    result.Should().Contain("video.mp4");
+    result.Should().EndWith("\"");
+}
+
+[Fact]
+public void FixOutputPath_WithExistingQuotes_ShouldRemoveAndReaddQuotes()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--output \"video.mp4\"";
+
+    // Act
+    var result = sut.FixOutputPath(input);
+
+    // Assert
+    result.Should().StartWith("--output \"");
+    result.Should().Contain(paths.Downloads);
+    result.Should().EndWith("\"");
+}
+
+[Fact]
+public void FixOutputPath_WhenConfigFolderAlreadyPresent_ShouldNotDuplicate()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = $"-o {Path.Combine(paths.Config, "video.mp4")}";
+
+    // Act
+    var result = sut.FixOutputPath(input);
+
+    // Assert
+    result.Should().Contain(paths.Config);
+    var occurrences = result.Split(new[] { paths.Config }, StringSplitOptions.None).Length - 1;
+    occurrences.Should().Be(1, "ConfigFolder should only appear once");
+}
+
+[Fact]
+public void FixOutputPath_WithComplexTemplate_ShouldPreserveTemplate()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "-o \"%(title)s.%(ext)s\"";
+
+    // Act
+    var result = sut.FixOutputPath(input);
+
+    // Assert
+    result.Should().Contain("%(title)s.%(ext)s");
+    result.Should().Contain(paths.Downloads);
+}
+#endregion
+
+#region FixPathPath
+[Fact]
+public void FixPathPath_WithSimplePath_ShouldAddDownloadFolder()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "-P /downloads";
+
+    // Act
+    var result = sut.FixPathPath(input);
+
+    // Assert
+    result.Should().StartWith("-P \"");
+    result.Should().Contain(paths.Downloads);
+    result.Should().EndWith("\"");
+}
+
+[Fact]
+public void FixPathPath_WithTypeAndPath_ShouldAddDownloadFolderToPath()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--paths home:/downloads";
+
+    // Act
+    var result = sut.FixPathPath(input);
+
+    // Assert
+    result.Should().StartWith("--paths \"home:");
+    result.Should().Contain(paths.Downloads);
+    result.Should().Contain("downloads");
+    result.Should().EndWith("\"");
+}
+
+[Fact]
+public void FixPathPath_WhenConfigFolderAlreadyPresent_ShouldReturnUnchanged()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = $"-P \"{paths.Config}/downloads\"";
+
+    // Act
+    var result = sut.FixPathPath(input);
+
+    // Assert
+    result.Should().Be(input);
+}
+
+[Fact]
+public void FixPathPath_WithQuotedPath_ShouldHandleCorrectly()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--paths \"temp:/files\"";
+
+    // Act
+    var result = sut.FixPathPath(input);
+
+    // Assert
+    result.Should().Contain("temp:");
+    result.Should().Contain(paths.Downloads);
+}
+#endregion
+
+#region MakeOneArgumentPerLine
+[Fact]
+public void MakeOneArgumentPerLine_WithMultipleArgsOnOneLine_ShouldSplitToSeparateLines()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--format bestvideo -o output.mp4";
+
+    // Act
+    var result = sut.MakeOneArgumentPerLine(input);
+
+    // Assert
+    result.Should().HaveCountGreaterThan(1);
+}
+
+[Fact]
+public void MakeOneArgumentPerLine_WithComments_ShouldPreserveComments()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "# This is a comment\n--format bestvideo";
+
+    // Act
+    var result = sut.MakeOneArgumentPerLine(input);
+
+    // Assert
+    result.Should().Contain(line => line.Contains("# This is a comment"));
+}
+
+[Fact]
+public void MakeOneArgumentPerLine_WithEmptyLines_ShouldHandleCorrectly()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--format bestvideo\n\n\n--output video.mp4";
+
+    // Act
+    var result = sut.MakeOneArgumentPerLine(input);
+
+    // Assert
+    result.Should().NotBeEmpty();
+    result.Should().Contain(line => line.Contains("--format"));
+    result.Should().Contain(line => line.Contains("--output"));
+}
+
+[Fact]
+public void MakeOneArgumentPerLine_WithOutputPath_ShouldFixPath()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "-o video.mp4";
+
+    // Act
+    var result = sut.MakeOneArgumentPerLine(input);
+
+    // Assert
+    result.Should().ContainSingle();
+    result[0].Should().Contain(paths.Downloads);
+}
+#endregion
+
+#region FixConfigContent
+[Fact]
+public void FixConfigContent_WithMultilineInput_ShouldReturnFormattedString()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "--format bestvideo\n-o output.mp4";
+
+    // Act
+    var result = sut.FixConfigContent(input);
+
+    // Assert
+    result.Should().Contain(Environment.NewLine);
+    result.Should().Contain("--format");
+    result.Should().Contain(paths.Downloads);
+}
+
+[Fact]
+public void FixConfigContent_WithCommentsAndArgs_ShouldPreserveBoth()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "# Download config\n--format bestvideo\n# Output settings\n-o video.mp4";
+
+    // Act
+    var result = sut.FixConfigContent(input);
+
+    // Assert
+    result.Should().Contain("# Download config");
+    result.Should().Contain("# Output settings");
+    result.Should().Contain("--format");
+}
+
+[Fact]
+public void FixConfigContent_WithEmptyString_ShouldReturnEmptyString()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = "";
+
+    // Act
+    var result = sut.FixConfigContent(input);
+
+    // Assert
+    result.Should().BeEmpty();
+}
+
+[Fact]
+public void FixConfigContent_WithComplexConfig_ShouldFixAllPaths()
+{
+    // Arrange
+    var sut = GetConfigsServices();
+    var input = @"--format bestvideo
+-o video.mp4
+--paths home:/downloads
+# End of config";
+
+    // Act
+    var result = sut.FixConfigContent(input);
+
+    // Assert
+    var lines = result.Split(Environment.NewLine);
+    lines.Should().Contain(line => line.Contains(paths.Downloads) && line.Contains("video.mp4"));
+    lines.Should().Contain(line => line.Contains(paths.Downloads) && line.Contains("home:"));
+    lines.Should().Contain("# End of config");
+}
+#endregion
+
 }

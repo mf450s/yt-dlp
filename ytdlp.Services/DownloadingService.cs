@@ -5,7 +5,10 @@ using ytdlp.Services.Interfaces;
 
 namespace ytdlp.Services
 {
-    public class DownloadingService(IConfigsServices _configsServices, IProcessFactory? _processFactory = null) : IDownloadingService
+    public class DownloadingService(
+        IConfigsServices _configsServices,
+        IProcessFactory? _processFactory = null
+        ) : IDownloadingService
     {
         private readonly IConfigsServices configsService = _configsServices;
         private readonly IProcessFactory processFactory = _processFactory ?? new ProcessFactory();

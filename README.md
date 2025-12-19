@@ -14,9 +14,9 @@ Get, edit content of config; Add new or delete config
 Standard Directories:
 
 ```
-"DownloadDir": "../downloads",
-"ArchiveDir": "../archives",
-"ConfigDir": "../configs"
+"Downloads": "/app/downloads",
+"Archive": "/app/archive",
+"Config": "/app/config"
 ```
 
 
@@ -26,12 +26,5 @@ Dump:
 
 
 ich rufe yt-dlp als binary auf(glaub ich). Ich konfiguriere halt nen yt-dlp befehl. yt-dlp und seine dependencys sollen mitinstalliert werden. ffmpeg zum beispiel auch. Und ich bekomme irgendne jsruntime warnung und irgendwas von "Deno" steht da dann auch bei. Das sollte gefixt werden
-
-
-  "Dirs": {
-    "DownloadDir": "../downloads",
-    "ArchiveDir": "../archives",
-    "ConfigDir": "../configs"
-  }
 
   - [ ] Command Injektion fixen
