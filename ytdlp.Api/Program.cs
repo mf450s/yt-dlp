@@ -26,9 +26,10 @@ builder.Services.AddScoped<IConfigsServices, ConfigsServices>();
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
 builder.Services.AddScoped<IPathParserService, PathParserService>();
 
-
-builder.Services.Configure<PathConfiguration>(
-    builder.Configuration.GetSection("Paths"));
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); // HTTP auf Port 8080
+});
 
 var app = builder.Build();
 
