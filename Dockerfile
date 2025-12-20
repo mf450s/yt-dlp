@@ -1,46 +1,41 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ytdlp.sln ./
-COPY ytdlp.Api/ytdlp.Api.csproj ./ytdlp.Api/
-COPY ytdlp.Services/ytdlp.Services.csproj ./ytdlp.Services/
-COPY ytdlp.Tests/ytdlp.Tests.csproj ./ytdlp.Tests/
-
-RUN dotnet restore
 COPY . .
-WORKDIR /src/ytdlp.Api
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-USER root
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# ALLE Dependencies auf einmal (inkl. unzip!)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates ffmpeg unzip && \
-    rm -rf /var/lib/apt/lists/*
-
-# yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
-    -o /usr/local/bin/yt-dlp && chmod +x /usr/local/bin/yt-dlp
-
-# Deno (funktioniert jetzt!)
-RUN curl -fsSL https://deno.land/install.sh | sh && \
-    cp /root/.deno/bin/deno /usr/local/bin/deno && chmod +x /usr/local/bin/deno
-
-# User & Ordner
-RUN groupadd -g 1000 appuser && \
-    useradd -u 1000 -g 1000 -m appuser && \
-    mkdir -p /app/downloads /app/archive /app/configs && \
-    chown -R 1000:1000 /app
-
-USER 1000:1000
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
-COPY --from=build --chown=1000:1000 /app/publish .
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    ffmpeg \
+    curl \
+    unzip \
+    tini \
+    && pip install --no-cache-dir --upgrade yt-dlp \
+    && curl -fsSL https://deno.land/install/install.sh | sh \
+    && mv /root/.deno/bin/deno /usr/local/bin/ \
+    && chmod +x /usr/local/bin/deno \
+    && addgroup -g 1000 media \
+    && adduser -D -u 1000 -G media yt-dlp \
+    && mkdir -p /app/downloads /app/archive /app/configs \
+    && chown -R yt-dlp:media /app \
+    && chmod -R 775 /app
+
+COPY --from=build /app/publish .
+
+RUN echo "--restrict-filenames" > /app/configs/default.conf \
+    && echo "--embed-thumbnail" >> /app/configs/default.conf \
+    && echo "--embed-metadata" >> /app/configs/default.conf \
+    && echo "--sponsorblock-mark selfpromo,intro,outro,hook" >> /app/configs/default.conf
+
+VOLUME ["/app/downloads", "/app/archive", "/app/configs"]
 
 EXPOSE 8080
-ENV PORT=8080 ASPNETCORE_URLS=http://+:8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/api/ytdlp/config || exit 1
-
-ENTRYPOINT ["dotnet", "ytdlp.Api.dll"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["dotnet", "YourApi.dll"]
