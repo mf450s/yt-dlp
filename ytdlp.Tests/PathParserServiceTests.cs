@@ -2,13 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 using ytdlp.Services;
 using Microsoft.Extensions.Options;
 using ytdlp.Configs;
-using FluentAssertions;
+
 namespace ytdlp.Tests.Services;
 
 [ExcludeFromCodeCoverage]
 public class PathParserServiceTests
 {
-    #region Helper
+    #region Setup
     public PathParserService GetConfigsServices(
         IOptions<PathConfiguration>? iOptionsPathConfig = null,
         PathConfiguration? pathConfiguration = null
@@ -20,146 +20,41 @@ public class PathParserServiceTests
 
         return new PathParserService(iOptionsPathConfig);
     }
-    private readonly PathConfiguration paths = new();
 
-
+    private readonly PathConfiguration paths = new()
+    {
+        Downloads = "/app/downloads/",
+        Archive = "/app/archive/"
+    };
     #endregion
 
-    #region CheckAndFixOutputAndPath
     [Theory]
-    [InlineData("-o video.mp4")]
-    [InlineData("--output video.mp4")]
-    public void CheckAndFixOutputAndPath_WithOutputOption_ShouldCallFixOutputPath(string input)
+    // Download-Pfad Tests
+    [InlineData("-o /app/downloads/video", "-o \"/app/downloads/video\"")]
+    [InlineData("-o video/", "-o \"/app/downloads/video/\"")]
+    [InlineData("-o /video/", "-o \"/app/downloads/video/\"")]
+    [InlineData("-o video", "-o \"/app/downloads/video\"")]
+    [InlineData("-o \"video xyz\"", "-o \"/app/downloads/video xyz\"")]
+    [InlineData("-o \"%(title)s.%(ext)s\"", "-o \"/app/downloads/%(title)s.%(ext)s\"")]
+    [InlineData("-o \" spaced \"", "-o \"/app/downloads/spaced\"")]
+    // Archive-Pfad Tests
+    [InlineData("--download-archive /app/archive/video.txt", "--download-archive \"/app/archive/video.txt\"")]
+    [InlineData("--download-archive video.txt", "--download-archive \"/app/archive/video.txt\"")]
+    [InlineData("--download-archive /video.txt", "--download-archive \"/app/archive/video.txt\"")]
+    [InlineData("--download-archive \"archive.txt\"", "--download-archive \"/app/archive/archive.txt\"")]
+    // Keine Änderungen nötig
+    [InlineData("--format bestvideo", "--format bestvideo")]
+    [InlineData("-f best", "-f best")]
+    [InlineData("# comment", "# comment")]
+    public void CheckAndFixPaths_ReturnsCorrectLine(string inputLine, string expectedOutputLine)
     {
         // Arrange
-        var sut = GetConfigsServices();
+        var service = GetConfigsServices();
 
         // Act
-        var result = sut.CheckAndFixPaths(input);
+        string actualOutputLine = service.CheckAndFixPaths(inputLine);
 
         // Assert
-        result.Should().Contain(paths.Downloads);
-        result.Should().Contain("video.mp4");
+        Assert.Equal(expectedOutputLine, actualOutputLine);
     }
-
-    [Theory]
-    [InlineData("-P /downloads")]
-    [InlineData("--paths home:/downloads")]
-    public void CheckAndFixOutputAndPath_WithPathOption_ShouldCallFixPathPath(string input)
-    {
-        // Arrange
-        var sut = GetConfigsServices();
-
-        // Act
-        var result = sut.CheckAndFixPaths(input);
-
-        // Assert
-        result.Should().Contain(paths.Downloads);
-    }
-
-    [Theory]
-    [InlineData("--format bestvideo")]
-    [InlineData("-f best")]
-    [InlineData("# comment")]
-    public void CheckAndFixOutputAndPath_WithoutOutputOrPath_ShouldReturnUnchanged(string input)
-    {
-        // Arrange
-        var sut = GetConfigsServices();
-
-        // Act
-        var result = sut.CheckAndFixPaths(input);
-
-        // Assert
-        result.Should().Be(input);
-    }
-    #endregion
-    #region FixOutputPath
-    [Theory]
-    [InlineData("-o video.mp4", "-o \"")]
-    [InlineData("--output \"video.mp4\"", "--output \"")]
-    [InlineData("-o \"%(title)s.%(ext)s\"", "-o \"")]
-    public void FixOutputPath_ShouldAddDownloadsFolderAndQuotes(string input, string expectedStart)
-    {
-        // Arrange
-        var sut = GetConfigsServices();
-
-        // Act
-        var result = sut.FixOutputPath(input);
-
-        // Assert
-        result.Should().StartWith(expectedStart);
-        result.Should().Contain(paths.Downloads);
-        result.Should().EndWith("\"");
-    }
-
-    [Fact]
-    public void FixOutputPath_WhenConfigFolderAlreadyPresent_ShouldNotDuplicate()
-    {
-        // Arrange
-        var sut = GetConfigsServices();
-        var input = $"-o {Path.Combine(paths.Config, "video.mp4")}";
-
-        // Act
-        var result = sut.FixOutputPath(input);
-
-        // Assert
-        result.Should().Contain(paths.Config);
-        var occurrences = result.Split(new[] { paths.Config }, StringSplitOptions.None).Length - 1;
-        occurrences.Should().Be(1, "ConfigFolder should only appear once");
-    }
-
-    [Fact]
-    public void FixOutputPath_WithComplexTemplate_ShouldPreserveTemplate()
-    {
-        // Arrange
-        var sut = GetConfigsServices();
-        var input = "-o \"%(title)s.%(ext)s\"";
-
-        // Act
-        var result = sut.FixOutputPath(input);
-
-        // Assert
-        result.Should().Contain("%(title)s.%(ext)s");
-        result.Should().Contain(paths.Downloads);
-    }
-    #endregion
-    #region FixPathPath
-    [Theory]
-    [InlineData("-P /downloads")]
-    [InlineData("--paths home:/downloads")]
-    [InlineData("--paths \"temp:/files\"")]
-    public void FixPathPath_ShouldAddDownloadFolder(string input)
-    {
-        // Arrange & Act
-        var sut = GetConfigsServices();
-        var result = sut.FixPathPath(input);
-
-        // Assert
-        result.Should().Contain(paths.Downloads);
-    }
-
-    [Fact]
-    public void FixPathPath_WhenDownloadFolderAlreadyPresent_ShouldReturnUnchanged()
-    {
-        // Bleibt als separater Test
-    }
-
-    #endregion
-    #region FixArchivePath
-    [Theory]
-    [InlineData($"--download-archive /app/archive/download", "--download-archive \"/app/archive/download\"")]
-    [InlineData($"--download-archive /download", "--download-archive \"/app/archive/download\"")]
-
-    public void FixConfigPath_With(string input, string expectedOutput)
-    {
-        // Act
-        var sut = GetConfigsServices();
-
-        // Assert
-        var result = sut.FixArchivePath(input);
-
-        result.Should().Be(expectedOutput);
-    }
-
-    #endregion
 }

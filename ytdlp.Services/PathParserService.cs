@@ -16,94 +16,38 @@ public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserS
         // Check for -o or --output
         if (trimmed.StartsWith("-o ") || trimmed.StartsWith("--output "))
         {
-            return FixOutputPath(trimmed);
-        }
-
-        // Check for -P or --paths
-        if (trimmed.StartsWith("-P ") || trimmed.StartsWith("--paths "))
-        {
-            return FixPathPath(trimmed);
+            return FixPath(trimmed, downloadFolder);
         }
 
         if (trimmed.StartsWith("--download-archive"))
         {
-            return FixArchivePath(trimmed);
+            return FixPath(trimmed, archiveFolder);
         }
-
-        // Return unchanged if not an output/path option
         return line;
     }
-    internal string FixOutputPath(string line)
+    internal string FixPath(string line, string folder)
     {
         string[] parts = line.Split([' '], 2);
 
         if (parts.Length != 2)
             return line;
 
-        string template = parts[1].TrimStart();
+        string template = parts[1].Trim();
 
         // Remove quotes if present
         if (template.StartsWith("\"") && template.EndsWith("\""))
+        {
             template = template.Substring(1, template.Length - 2);
-
-        // Add downloadFolder if not already present
-        if (!template.Contains(downloadFolder))
-        {
-            template = Path.Combine(downloadFolder, template);
+            template = template.Trim();
         }
 
-        return $"{parts[0]} \"{template}\"";
-    }
-
-    internal string FixPathPath(string line)
-    {
-        string[] parts = line.Split([' '], 2);
-
-        if (parts.Length != 2)
-            return line;
-
-        string pathValue = parts[1].TrimStart();
-
-        // Remove quotes if present
-        if (pathValue.StartsWith("\"") && pathValue.EndsWith("\""))
-            pathValue = pathValue.Substring(1, pathValue.Length - 2);
-
-        // Check if downloadFolder is already in path
-        if (pathValue.Contains(downloadFolder))
-            return line;
-
-        // Handle type:path format (e.g., "home:/downloads")
-        if (pathValue.Contains(':'))
+        // Add folder if not already present
+        if (!template.Contains(folder))
         {
-            string[] pathParts = pathValue.Split([':'], 2);
-            string type = pathParts[0];
-            string path = pathParts[1];
-            string newArg = $"{parts[0]} \"{type}:{downloadFolder}{path}\"";
-
-            return newArg;
-        }
-        else
-        {
-            string newArg = $"{parts[0]} \"{downloadFolder}{pathValue}\"";
-            return newArg;
-        }
-    }
-
-    internal string FixArchivePath(string line)
-    {
-        string[] parts = line.Split([' '], 2);
-        if (parts.Length != 2)
-            return line;
-        string template = parts[1].TrimStart();
-        if (template.StartsWith("\"") && template.EndsWith("\""))
-            template = template.Substring(1, template.Length - 2);
-
-        if (!template.Contains(archiveFolder))
-        {
-            // remove leading "/" to avoid "//"
+            // Remove leading "/" to avoid "//"
             if (template.StartsWith("/"))
                 template = template[1..];
-            template = $"{archiveFolder}{template}";
+            template = $"{folder}{template}";
         }
         return $"{parts[0]} \"{template}\"";
     }

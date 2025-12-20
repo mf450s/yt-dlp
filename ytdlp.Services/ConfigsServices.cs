@@ -12,7 +12,7 @@ public class ConfigsServices(
     IPathParserService pathParserService
     ) : IConfigsServices
 {
-    private readonly string configFolder = paths.Value.Config;
+    private readonly string configFolder = paths.Value.Config.ToString();
     private readonly string downloadFolder = paths.Value.Downloads;
     private readonly string archiveFolder = paths.Value.Archive;
     private readonly IFileSystem _fileSystem = fileSystem;
