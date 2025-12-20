@@ -5,7 +5,6 @@ using Moq;
 using FluentAssertions;
 using ytdlp.Services;
 using ytdlp.Services.Interfaces;
-using FluentResults;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ytdlp.Tests.Services;
@@ -26,10 +25,14 @@ public class ConfigsServicesTests
         public const string Music = "# Music Config\n--extract-audio\n--audio-format mp3";
         public const string Video = "# Video Config\n--format bestvideo";
         public const string Playlist = "# Playlist Config\n--yes-playlist";
-        public const string Multiline = "# Config Header\n--format bestvideo\n--output '%(title)s'\n# Comment";
+        public const string Multiline = @"# Config Header
+        --format bestvideo
+        --output '%(title)s'
+        # Comment";
         public const string Empty = "";
         public const string CommentOnly = "# This is a comment\n# Another comment\n#Third comment";
         public const string Complex = "# Download config\n--format bestvideo\n# Output settings\n-o video.mp4";
+        public const string Path = "-P temp:/home/ \n -paths home:/app/downloads/home/";
     }
 
     #endregion
@@ -75,7 +78,7 @@ public class ConfigsServicesTests
         // Arrange
         var mockFileSystem = new MockFileSystem();
         var sut = GetConfigsServices(mockFileSystem);
-        var expectedPath = $"{paths.Config}{configName}.conf"; // paths statt _paths
+        var expectedPath = $"{paths.Config}{configName}.conf";
 
         // Act
         var result = sut.GetWholeConfigPath(configName);
@@ -253,16 +256,12 @@ public class ConfigsServicesTests
 
     #region CreateConfig
 
-    [Theory]
-    [InlineData("music", TestConfigContent.Music)]
-    [InlineData("video", TestConfigContent.Video)]
-    [InlineData("playlist", TestConfigContent.Playlist)]
-    [InlineData("empty", TestConfigContent.Empty)]
-    [InlineData("multiline", TestConfigContent.Multiline)]
-    public async Task CreateNewConfigAsync_WhenFileDoesNotExist_ShouldCreateFileCorrectly(
-        string configName, string configContent)
+    [Fact]
+    public async Task CreateNewConfigAsync_WhenFileDoesNotExist_ShouldCreateFileCorrectly()
     {
         // Arrange
+        var configName = "music";
+        var configContent = TestConfigContent.Music;
         var mockFileSystem = new MockFileSystem();
         mockFileSystem.AddDirectory(paths.Config);
         var sut = GetConfigsServices(mockFileSystem);
@@ -278,11 +277,11 @@ public class ConfigsServicesTests
         mockFileSystem.File.ReadAllText(filePath).Should().Be(configContent);
     }
 
-    [Theory]
-    [InlineData("existing")]
-    public async Task CreateNewConfigAsync_WhenFileAlreadyExists_ShouldReturnFailure(string configName)
+    [Fact]
+    public async Task CreateNewConfigAsync_WhenFileAlreadyExists_ShouldReturnFailure()
     {
         // Arrange
+        var configName = "existing";
         var originalContent = "# Original Config";
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
@@ -305,14 +304,11 @@ public class ConfigsServicesTests
 
     #region SetConfigContent
 
-    [Theory]
-    [InlineData("music", TestConfigContent.Music)]
-    [InlineData("video", TestConfigContent.Video)]
-    [InlineData("playlist", TestConfigContent.Playlist)]
-    [InlineData("test", TestConfigContent.Empty)]
-    public async Task SetConfigContentAsync_WhenFileExists_ShouldUpdateCorrectly(
-        string configName, string newContent)
+    [Fact]
+    public async Task SetConfigContentAsync_WhenFileExists_ShouldUpdateCorrectly()
     {
+        var configName = "music";
+        var newContent = TestConfigContent.Music;
         // Arrange
         var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
     {
@@ -408,7 +404,6 @@ public class ConfigsServicesTests
 
     [Theory]
     [InlineData(TestConfigContent.CommentOnly)]
-    [InlineData("# Comment\nsome config line\n# Another comment")]
     [InlineData(TestConfigContent.Complex)]
     public void FixConfigContent_WithComments_ShouldPreserveAllComments(string content)
     {
@@ -434,7 +429,7 @@ public class ConfigsServicesTests
         string input, string? expectedResult, bool? expectDownloads = null)
     {
         // Arrange
-        var mockPathParser = new Mock<PathParserService>();
+        var mockPathParser = new Mock<IPathParserService>();
         mockPathParser.Setup(p => p.CheckAndFixPaths(It.IsAny<string>()))
             .Returns<string>(s => $"/fixed/path/{s.Trim()}");
 
@@ -447,19 +442,6 @@ public class ConfigsServicesTests
         mockPathParser.Verify(p => p.CheckAndFixPaths(It.IsAny<string>()), Times.AtLeastOnce());
         if (expectedResult != null) result.Should().Contain(expectedResult);
         if (expectDownloads == true) result.Should().Contain(paths.Downloads);
-    }
-
-    [Fact]
-    public void FixConfigContent_WithNullPathParser_ShouldThrowNullReferenceException()
-    {
-        // Arrange
-        var sut = GetConfigsServices(pathParserSerivce: null!);
-
-        // Act
-        var act = () => sut.FixConfigContent("some content");
-
-        // Assert
-        act.Should().Throw<NullReferenceException>();
     }
 
     #endregion

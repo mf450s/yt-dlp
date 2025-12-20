@@ -1,10 +1,6 @@
-using System;
-using System.IO.Abstractions;
-using FluentResults;
 using Microsoft.Extensions.Options;
 using ytdlp.Configs;
 using ytdlp.Services.Interfaces;
-using System.Text;
 
 namespace ytdlp.Services;
 
