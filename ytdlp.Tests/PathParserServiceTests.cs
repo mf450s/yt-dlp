@@ -9,7 +9,7 @@ namespace ytdlp.Tests.Services;
 public class PathParserServiceTests
 {
     #region Helper
-    public PathParserSerivce GetConfigsServices(
+    public PathParserService GetConfigsServices(
         IOptions<PathConfiguration>? iOptionsPathConfig = null,
         PathConfiguration? pathConfiguration = null
     )
@@ -18,7 +18,7 @@ public class PathParserServiceTests
             ? Options.Create(pathConfiguration)
             : Options.Create(paths);
 
-        return new PathParserSerivce(iOptionsPathConfig);
+        return new PathParserService(iOptionsPathConfig);
     }
     private readonly PathConfiguration paths = new();
 

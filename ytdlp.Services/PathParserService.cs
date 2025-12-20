@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ytdlp.Services;
 
-public class PathParserSerivce(IOptions<PathConfiguration> paths) : IPathParserService
+public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserService
 {
     private readonly string configFolder = paths.Value.Config;
     private readonly string downloadFolder = paths.Value.Downloads;

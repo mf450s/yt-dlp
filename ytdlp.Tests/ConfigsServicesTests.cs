@@ -4,6 +4,7 @@ using ytdlp.Configs;
 using Moq;
 using FluentAssertions;
 using ytdlp.Services;
+using ytdlp.Services.Interfaces;
 using FluentResults;
 using System.Diagnostics.CodeAnalysis;
 
@@ -39,13 +40,13 @@ public class ConfigsServicesTests
         MockFileSystem? mockFileSystem = null,
         IOptions<PathConfiguration>? iOptionsPathConfig = null,
         PathConfiguration? pathConfiguration = null,
-        PathParserSerivce? pathParserSerivce = null)
+        IPathParserService? pathParserSerivce = null)
     {
         mockFileSystem ??= new MockFileSystem();
         iOptionsPathConfig ??= pathConfiguration != null
             ? Options.Create(pathConfiguration)
             : Options.Create(paths);
-        pathParserSerivce ??= new PathParserSerivce(iOptionsPathConfig);
+        pathParserSerivce ??= new PathParserService(iOptionsPathConfig);
 
         return new ConfigsServices(mockFileSystem, iOptionsPathConfig, pathParserSerivce);
     }
@@ -54,7 +55,7 @@ public class ConfigsServicesTests
     {
         var fileData = configs.ToDictionary(
             kvp => $"{paths.Config}{kvp.Key}.conf",
-            kvp => new MockFileData(kvp.Value) as MockFileData
+            kvp => new MockFileData(kvp.Value)
         );
         return new MockFileSystem(fileData);
     }
@@ -433,7 +434,7 @@ public class ConfigsServicesTests
         string input, string? expectedResult, bool? expectDownloads = null)
     {
         // Arrange
-        var mockPathParser = new Mock<PathParserSerivce>();
+        var mockPathParser = new Mock<PathParserService>();
         mockPathParser.Setup(p => p.CheckAndFixPaths(It.IsAny<string>()))
             .Returns<string>(s => $"/fixed/path/{s.Trim()}");
 
