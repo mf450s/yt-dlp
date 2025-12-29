@@ -50,8 +50,10 @@ namespace ytdlp.Api
             else return Conflict(result.Value);
         }
         [HttpPatch("config/{configName}")]
-        public async Task<IActionResult> SetConfigContentAsync(string configName, [FromBody] string configContent)
+        public async Task<IActionResult> SetConfigContentAsync(string configName)
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string configContent = await reader.ReadToEndAsync();
             Result<string> result = await configsServices.SetConfigContentAsync(configName, configContent);
             if (result.IsSuccess) return Ok(configContent);
             else return NotFound(configContent);
