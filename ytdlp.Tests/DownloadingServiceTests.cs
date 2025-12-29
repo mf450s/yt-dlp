@@ -175,7 +175,7 @@ namespace ytdlp.Tests
             string url, string configPath)
         {
             // Act
-            var startInfo = await _service.GetProcessStartInfoAsync(url, configPath);
+            var startInfo = await DownloadingService.GetProcessStartInfoAsync(url, configPath);
 
             // Assert
             Assert.Equal("yt-dlp", startInfo.FileName);
@@ -190,7 +190,7 @@ namespace ytdlp.Tests
             string configPath = "../configs/test.conf";
 
             // Act
-            var startInfo = await _service.GetProcessStartInfoAsync(url, configPath);
+            var startInfo = await DownloadingService.GetProcessStartInfoAsync(url, configPath);
 
             // Assert
             Assert.True(startInfo.RedirectStandardOutput);
@@ -206,7 +206,7 @@ namespace ytdlp.Tests
             string url, string configPath)
         {
             // Act
-            var startInfo = await _service.GetProcessStartInfoAsync(url, configPath);
+            var startInfo = await DownloadingService.GetProcessStartInfoAsync(url, configPath);
 
             // Assert
             Assert.Contains(url, startInfo.Arguments);
@@ -221,7 +221,7 @@ namespace ytdlp.Tests
             string url, string configPath)
         {
             // Act
-            var startInfo = await _service.GetProcessStartInfoAsync(url, configPath);
+            var startInfo = await DownloadingService.GetProcessStartInfoAsync(url, configPath);
 
             // Assert
             Assert.NotNull(startInfo);

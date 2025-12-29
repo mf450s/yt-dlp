@@ -34,7 +34,13 @@ namespace ytdlp.Services
             Console.WriteLine("Errors:");
             Console.WriteLine(error);
         }
-        internal async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath)
+        /// <summary>
+        /// Creates and returns a <see cref="ProcessStartInfo"/> object with the necessary arguments to execute yt-dlp.
+        /// </summary>
+        /// <param name="url">The URL of the media to download.</param>
+        /// <param name="wholeConfigPath">The path to the configuration file for yt-dlp.</param>
+        /// <returns>A <see cref="ProcessStartInfo"/> object configured to run yt-dlp with the provided URL and configuration.</returns>
+        internal static async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath)
         {
             // Construct the command and arguments for yt-dlp
             string[] args =
