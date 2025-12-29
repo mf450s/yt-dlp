@@ -6,9 +6,11 @@ namespace ytdlp.Services;
 
 public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserService
 {
-    private readonly string configFolder = paths.Value.Config;
-    private readonly string downloadFolder = paths.Value.Downloads;
-    private readonly string archiveFolder = paths.Value.Archive;
+    private readonly string _configFolder = paths.Value.Config;
+    private readonly string _downloadFolder = paths.Value.Downloads;
+    private readonly string _archiveFolder = paths.Value.Archive;
+    private readonly string _cookiesFolder = paths.Value.Cookies;
+
     /// <summary>
     /// prepends complete paths to yt-dlp paths/download/archive options.
     /// Gets paths from <PathConfiguration>
@@ -22,15 +24,25 @@ public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserS
         // Check for -o or --output
         if (trimmed.StartsWith("-o ") || trimmed.StartsWith("--output "))
         {
-            return FixPath(trimmed, downloadFolder);
+            return FixPath(trimmed, _downloadFolder);
         }
 
         if (trimmed.StartsWith("--download-archive"))
         {
-            return FixPath(trimmed, archiveFolder);
+            return FixPath(trimmed, _archiveFolder);
         }
         return line;
     }
+
+    /// <summary>
+    /// Gets the cookies folder path from the PathConfiguration.
+    /// </summary>
+    /// <returns>The full path to the cookies folder.</returns>
+    public string GetCookiesFolderPath()
+    {
+        return _cookiesFolder;
+    }
+
     /// <summary>
     /// Fixes the path, by prepending the folder to the given path in the line
     /// </summary>
