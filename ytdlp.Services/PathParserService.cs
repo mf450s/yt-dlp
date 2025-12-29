@@ -9,6 +9,12 @@ public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserS
     private readonly string configFolder = paths.Value.Config;
     private readonly string downloadFolder = paths.Value.Downloads;
     private readonly string archiveFolder = paths.Value.Archive;
+    /// <summary>
+    /// prepends complete paths to yt-dlp paths/download/archive options.
+    /// Gets paths from <PathConfiguration>
+    /// </summary>
+    /// <param name="line"></param>
+    /// <returns>line with correct path</returns>
     public string CheckAndFixPaths(string line)
     {
         string trimmed = line.Trim();
@@ -25,6 +31,12 @@ public class PathParserService(IOptions<PathConfiguration> paths) : IPathParserS
         }
         return line;
     }
+    /// <summary>
+    /// Fixes the path, by prepending the folder to the given path in the line
+    /// </summary>
+    /// <param name="line">complete line</param>
+    /// <param name="folder">folder for the complete path</param>
+    /// <returns>fixed line with complete absolute path</returns>
     internal string FixPath(string line, string folder)
     {
         string[] parts = line.Split([' '], 2);

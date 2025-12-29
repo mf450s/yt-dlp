@@ -19,7 +19,7 @@ public class ConfigsServices(
     private readonly IPathParserService pathParser = pathParserService;
     public string GetWholeConfigPath(string configName)
     {
-        return $"{configFolder}/{configName}.conf";
+        return $"{configFolder}{configName}.conf";
     }
     public List<string> GetAllConfigNames()
     {
@@ -84,11 +84,22 @@ public class ConfigsServices(
             return Result.Fail($"File with name '{name}' doesnt exists");
 
     }
+    /// <summary>
+    /// writes content to specified path using filesystemwriter
+    /// </summary>
+    /// <param name="path">path to write to</param>
+    /// <param name="configContent">content written to path</param>
+    /// <returns></returns>
     internal async Task WriteContentToFile(string path, string configContent)
     {
         await using var writer = _fileSystem.File.CreateText(path);
         await writer.WriteAsync(configContent);
     }
+    /// <summary>
+    /// trims, splits config Content
+    /// </summary>
+    /// <param name="content"></param>
+    /// <returns>string of arguments with fixed paths</returns>
     internal string FixConfigContent(string content)
     {
         var lines = content.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
@@ -115,6 +126,11 @@ public class ConfigsServices(
         }
         return string.Join(Environment.NewLine, returnList);
     }
+    /// <summary>
+    /// Split arguments.
+    /// </summary>
+    /// <param name="line">one line that may contain multiple args</param>
+    /// <returns>List of strings containing one argument each</returns>
     internal static List<string> SplitArguments(string line)
     {
         var args = new List<string>();

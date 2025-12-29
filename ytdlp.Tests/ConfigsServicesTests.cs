@@ -431,7 +431,7 @@ public class ConfigsServicesTests
         // Arrange
         var mockPathParser = new Mock<IPathParserService>();
         mockPathParser.Setup(p => p.CheckAndFixPaths(It.IsAny<string>()))
-            .Returns<string>(s => $"/fixed/path/{s.Trim()}");
+            .Returns<string>(s => $"{paths.Downloads}{s.Trim()}");
 
         var sut = GetConfigsServices(pathParserSerivce: mockPathParser.Object);
 
