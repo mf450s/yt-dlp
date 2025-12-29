@@ -8,29 +8,16 @@ COPY ytdlp.Api/ytdlp.Api.csproj ./ytdlp.Api/
 COPY ytdlp.Services/ytdlp.Services.csproj ./ytdlp.Services/
 COPY ytdlp.Tests/ytdlp.Tests.csproj ./ytdlp.Tests/
 
-# Bestimme Runtime Identifier basierend auf der Architektur
-ARG TARGETARCH
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        echo "linux-musl-arm64" > /tmp/rid.txt; \
-    else \
-        echo "linux-musl-x64" > /tmp/rid.txt; \
-    fi
-
-# Restore mit explizitem RID
-RUN dotnet restore ytdlp.Api/ytdlp.Api.csproj \
-    -r $(cat /tmp/rid.txt)
+RUN dotnet restore ytdlp.Api/ytdlp.Api.csproj
 
 # Copy entire source
 COPY . .
 
-# Publish mit Runtime Identifier (ReadyToRun erfordert RID)
+# Publish without RID (framework-dependent, no ReadyToRun)
 RUN dotnet publish ytdlp.Api/ytdlp.Api.csproj \
     -c Release \
-    -r $(cat /tmp/rid.txt) \
     -o /app/publish \
     --no-restore \
-    --self-contained false \
-    -p:PublishReadyToRun=true \
     -p:DebugType=none \
     -p:DebugSymbols=false
 
