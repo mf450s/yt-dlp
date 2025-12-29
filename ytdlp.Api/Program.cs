@@ -26,7 +26,7 @@ builder.Services.AddScoped<IDownloadingService, DownloadingService>();
 builder.Services.AddScoped<IConfigsServices, ConfigsServices>();
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
 builder.Services.AddScoped<IPathParserService, PathParserService>();
-builder.Services.AddScoped<IStartupConfigFixer, StartupConfigFixer>();
+// builder.Services.AddScoped<IStartupConfigFixer, StartupConfigFixer>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {
