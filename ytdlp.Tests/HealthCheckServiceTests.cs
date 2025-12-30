@@ -1,8 +1,10 @@
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ytdlp.Services;
 using ytdlp.Services.Interfaces;
+using ytdlp.Configs;
 using ytdlp.Api;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,13 +14,29 @@ namespace ytdlp.Tests
     {
         private readonly Mock<ILogger<HealthCheckService>> _mockLogger;
         private readonly Mock<IDownloadingService> _mockDownloadingService;
+        private readonly Mock<IOptions<PathConfiguration>> _mockPathConfiguration;
         private readonly HealthCheckService _healthCheckService;
 
         public HealthCheckServiceTests()
         {
             _mockLogger = new Mock<ILogger<HealthCheckService>>();
             _mockDownloadingService = new Mock<IDownloadingService>();
-            _healthCheckService = new HealthCheckService(_mockLogger.Object, _mockDownloadingService.Object);
+            
+            // Setup PathConfiguration mock with default test paths
+            var pathConfig = new PathConfiguration
+            {
+                Downloads = "./downloads",
+                Archive = "./archive",
+                Config = "./configs",
+                Cookies = "./cookies"
+            };
+            _mockPathConfiguration = new Mock<IOptions<PathConfiguration>>();
+            _mockPathConfiguration.Setup(x => x.Value).Returns(pathConfig);
+            
+            _healthCheckService = new HealthCheckService(
+                _mockLogger.Object, 
+                _mockDownloadingService.Object,
+                _mockPathConfiguration.Object);
         }
 
         [Fact]
