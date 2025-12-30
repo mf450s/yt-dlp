@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using ytdlp.Services.Interfaces;
 
 namespace ytdlp.Services
@@ -12,10 +10,12 @@ namespace ytdlp.Services
     {
         private readonly IConfigsServices configsService = _configsServices;
         private readonly IProcessFactory processFactory = _processFactory ?? new ProcessFactory();
+
         public async Task TryDownloadingFromURL(string url, string configFile)
         {
             string wholeConfigPath = configsService.GetWholeConfigPath(configFile);
             ProcessStartInfo startInfo = await GetProcessStartInfoAsync(url, wholeConfigPath);
+            
             // Start the process
             using IProcess process = processFactory.CreateProcess();
             process.StartInfo = startInfo;
@@ -34,6 +34,7 @@ namespace ytdlp.Services
             Console.WriteLine("Errors:");
             Console.WriteLine(error);
         }
+
         /// <summary>
         /// Creates and returns a <see cref="ProcessStartInfo"/> object with the necessary arguments to execute yt-dlp.
         /// </summary>
@@ -59,7 +60,7 @@ namespace ytdlp.Services
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            return startInfo;
+            return await Task.FromResult(startInfo);
         }
     }
 }
