@@ -4,6 +4,7 @@ using FluentResults;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using ytdlp.Configs;
+using ytdlp.Services.Logging;
 using System.Text;
 
 namespace ytdlp.Services;
@@ -30,7 +31,7 @@ public class ConfigsServices(
     public string GetWholeConfigPath(string configName)
     {
         string path = $"{configFolder}{configName}.conf";
-        _logger.LogDebug("Resolved config path for {ConfigName}: {Path}", configName, path);
+        _logger.LogConfigPathResolved(configName, path);
         return path;
     }
 
@@ -40,7 +41,7 @@ public class ConfigsServices(
     /// <returns>List of names of configfiles</returns>
     public List<string> GetAllConfigNames()
     {
-        _logger.LogDebug("Retrieving all config names from: {ConfigFolder}", configFolder);
+        _logger.LogDebug("📄 Retrieving all config names from: {ConfigFolder}", configFolder);
         
         try
         {
@@ -54,12 +55,12 @@ public class ConfigsServices(
                 configNames.Add(nameWithoutExtension);
             }
 
-            _logger.LogInformation("Found {Count} config files", configNames.Count);
+            _logger.LogConfigsCount(configNames.Count);
             return configNames;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving config names from {ConfigFolder}", configFolder);
+            _logger.LogError(ex, "🚨 Error retrieving config names from {ConfigFolder}", configFolder);
             return new List<string>();
         }
     }
@@ -71,7 +72,7 @@ public class ConfigsServices(
     /// <returns>content of the file</returns>
     public Result<string> GetConfigContentByName(string name)
     {
-        _logger.LogDebug("Retrieving config content for: {ConfigName}", name);
+        _logger.LogDebug("💯 Retrieving config content for: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
         
         if (_fileSystem.File.Exists(path))
@@ -80,25 +81,25 @@ public class ConfigsServices(
             {
                 using var reader = _fileSystem.File.OpenText(path);
                 string content = reader.ReadToEnd();
-                _logger.LogInformation("Successfully retrieved config: {ConfigName} ({Size} bytes)", name, content.Length);
+                _logger.LogConfigRetrieved(name, content.Length);
                 return Result.Ok(content);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reading config file: {ConfigName} at {Path}", name, path);
+                _logger.LogError(ex, "🚨 Error reading config file: {ConfigName} at {Path}", name, path);
                 return Result.Fail($"Error reading config file: {ex.Message}");
             }
         }
         else
         {
-            _logger.LogWarning("Config file not found: {ConfigName} at {Path}", name, path);
+            _logger.LogConfigNotFound(name);
             return Result.Fail($"Config file not found: {path}");
         }
     }
 
     public Result<string> DeleteConfigByName(string name)
     {
-        _logger.LogInformation("Attempting to delete config: {ConfigName}", name);
+        _logger.LogInformation("🗑️ Attempting to delete config: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
         
         if (_fileSystem.File.Exists(path))
@@ -106,18 +107,18 @@ public class ConfigsServices(
             try
             {
                 _fileSystem.File.Delete(path);
-                _logger.LogInformation("Successfully deleted config: {ConfigName}", name);
+                _logger.LogConfigDeleted(name);
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting config file: {ConfigName} at {Path}", name, path);
+                _logger.LogError(ex, "🚨 Error deleting config file: {ConfigName} at {Path}", name, path);
                 return Result.Fail($"Error deleting config file: {ex.Message}");
             }
         }
         else
         {
-            _logger.LogWarning("Cannot delete - config file not found: {ConfigName}", name);
+            _logger.LogConfigNotFound(name);
             return Result.Fail("File does not exist");
         }
     }
@@ -130,12 +131,12 @@ public class ConfigsServices(
     /// <returns>Result with success/failure message</returns>
     public async Task<Result<string>> CreateNewConfigAsync(string name, string configContent)
     {
-        _logger.LogInformation("Creating new config: {ConfigName}", name);
+        _logger.LogInformation("✨ Creating new config: {ConfigName}", name);
         string newPath = GetWholeConfigPath(name);
         
         if (_fileSystem.File.Exists(newPath))
         {
-            _logger.LogWarning("Cannot create config - file already exists: {ConfigName}", name);
+            _logger.LogWarning("⚠️ Cannot create config - file already exists: {ConfigName}", name);
             return Result.Fail($"File with name '{name}' already exists");
         }
         else
@@ -143,12 +144,12 @@ public class ConfigsServices(
             try
             {
                 await WriteContentToFile(newPath, configContent);
-                _logger.LogInformation("Successfully created config: {ConfigName} ({Size} bytes)", name, configContent.Length);
+                _logger.LogConfigCreated(name, configContent.Length);
                 return Result.Ok($"Config file '{name}' created successfully.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating config file: {ConfigName}", name);
+                _logger.LogError(ex, "🚨 Error creating config file: {ConfigName}", name);
                 return Result.Fail($"Error creating config file: {ex.Message}");
             }
         }
@@ -156,7 +157,7 @@ public class ConfigsServices(
 
     public async Task<Result<string>> SetConfigContentAsync(string name, string configContent)
     {
-        _logger.LogInformation("Updating config: {ConfigName}", name);
+        _logger.LogInformation("🔄 Updating config: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
         
         if (_fileSystem.File.Exists(path))
@@ -164,18 +165,18 @@ public class ConfigsServices(
             try
             {
                 await WriteContentToFile(path, configContent);
-                _logger.LogInformation("Successfully updated config: {ConfigName} ({Size} bytes)", name, configContent.Length);
+                _logger.LogConfigUpdated(name, configContent.Length);
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating config file: {ConfigName}", name);
+                _logger.LogError(ex, "🚨 Error updating config file: {ConfigName}", name);
                 return Result.Fail($"Error updating config file: {ex.Message}");
             }
         }
         else
         {
-            _logger.LogWarning("Cannot update - config file not found: {ConfigName}", name);
+            _logger.LogConfigNotFound(name);
             return Result.Fail($"File with name '{name}' doesn't exist");
         }
     }
@@ -240,7 +241,7 @@ public class ConfigsServices(
         {
             char c = line[i];
 
-            if (c == '"' || c == '\'')
+            if (c == '"' || c == '\''):
             {
                 inQuotes = !inQuotes;
                 currentArg.Append(c);
