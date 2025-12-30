@@ -21,9 +21,16 @@ namespace ytdlp.Api
         [HttpGet]
         public List<string> GetAllCookieNames()
         {
-            _logger.LogDebug("GetAllCookieNames request received");
+            var correlationId = HttpContext.TraceIdentifier;
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 GetAllCookieNames request received",
+                correlationId);
+            
             var cookies = cookiesService.GetAllCookieNames();
-            _logger.LogDebug("Returning {Count} cookie files", cookies.Count);
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 Returning {Count} cookie files",
+                correlationId, cookies.Count);
+            
             return cookies;
         }
 
@@ -34,16 +41,24 @@ namespace ytdlp.Api
         [HttpGet("{cookieName}")]
         public IActionResult GetCookieContentByName(string cookieName)
         {
-            _logger.LogDebug("GetCookieContentByName request: {CookieName}", cookieName);
+            var correlationId = HttpContext.TraceIdentifier;
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 GetCookieContentByName request | Cookie: {CookieName}",
+                correlationId, cookieName);
             
             Result<string> cookieContent = cookiesService.GetCookieContentByName(cookieName);
             if (cookieContent.IsFailed)
             {
-                _logger.LogWarning("Cookie not found: {CookieName}", cookieName);
-                return NotFound(new { error = cookieContent.Errors[0].Message });
+                _logger.LogWarning(
+                    "[{CorrelationId}] ⚠️ Cookie not found | Cookie: {CookieName}",
+                    correlationId, cookieName);
+                return NotFound(new { error = cookieContent.Errors[0].Message, correlationId });
             }
             
-            _logger.LogDebug("Returning cookie content for: {CookieName}", cookieName);
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 Returning cookie content | Cookie: {CookieName} | Size: {Size} bytes",
+                correlationId, cookieName, cookieContent.Value.Length);
+            
             return Ok(new { name = cookieName, content = cookieContent.Value });
         }
 
@@ -54,18 +69,25 @@ namespace ytdlp.Api
         [HttpDelete("{cookieName}")]
         public IActionResult DeleteCookieByName(string cookieName)
         {
-            _logger.LogInformation("DeleteCookieByName request: {CookieName}", cookieName);
+            var correlationId = HttpContext.TraceIdentifier;
+            _logger.LogInformation(
+                "[{CorrelationId}] 🗑️ DeleteCookieByName request | Cookie: {CookieName}",
+                correlationId, cookieName);
             
             Result<string> result = cookiesService.DeleteCookieByName(cookieName);
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Cookie deleted successfully: {CookieName}", cookieName);
+                _logger.LogInformation(
+                    "[{CorrelationId}] ✅ Cookie deleted successfully | Cookie: {CookieName}",
+                    correlationId, cookieName);
                 return NoContent();
             }
             else
             {
-                _logger.LogWarning("Failed to delete cookie: {CookieName}", cookieName);
-                return NotFound(new { error = result.Errors[0].Message });
+                _logger.LogWarning(
+                    "[{CorrelationId}] ⚠️ Failed to delete cookie | Cookie: {CookieName}",
+                    correlationId, cookieName);
+                return NotFound(new { error = result.Errors[0].Message, correlationId });
             }
         }
 
@@ -77,23 +99,32 @@ namespace ytdlp.Api
         [HttpPost("{cookieName}")]
         public async Task<IActionResult> CreateNewCookieAsync(string cookieName)
         {
-            _logger.LogInformation("CreateNewCookie request: {CookieName}", cookieName);
+            var correlationId = HttpContext.TraceIdentifier;
+            _logger.LogInformation(
+                "[{CorrelationId}] 🍪 CreateNewCookie request | Cookie: {CookieName}",
+                correlationId, cookieName);
             
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string cookieContent = await reader.ReadToEndAsync();
             
-            _logger.LogDebug("Creating cookie {CookieName} with {Size} bytes", cookieName, cookieContent.Length);
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 Creating cookie {CookieName} with {Size} bytes",
+                correlationId, cookieName, cookieContent.Length);
 
             Result<string> result = await cookiesService.CreateNewCookieAsync(cookieName, cookieContent);
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Cookie created successfully: {CookieName}", cookieName);
-                return Created($"api/cookies/{cookieName}", new { name = cookieName, message = result.Value });
+                _logger.LogInformation(
+                    "[{CorrelationId}] ✅ Cookie created successfully | Cookie: {CookieName}",
+                    correlationId, cookieName);
+                return Created($"api/cookies/{cookieName}", new { name = cookieName, message = result.Value, correlationId });
             }
             else
             {
-                _logger.LogWarning("Failed to create cookie: {CookieName}, Error: {Error}", cookieName, result.Value);
-                return Conflict(new { error = result.Value });
+                _logger.LogWarning(
+                    "[{CorrelationId}] ⚠️ Failed to create cookie | Cookie: {CookieName} | Error: {Error}",
+                    correlationId, cookieName, result.Value);
+                return Conflict(new { error = result.Value, correlationId });
             }
         }
 
@@ -104,23 +135,32 @@ namespace ytdlp.Api
         [HttpPatch("{cookieName}")]
         public async Task<IActionResult> SetCookieContentAsync(string cookieName)
         {
-            _logger.LogInformation("SetCookieContent request: {CookieName}", cookieName);
+            var correlationId = HttpContext.TraceIdentifier;
+            _logger.LogInformation(
+                "[{CorrelationId}] 🍪 SetCookieContent request | Cookie: {CookieName}",
+                correlationId, cookieName);
             
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string cookieContent = await reader.ReadToEndAsync();
             
-            _logger.LogDebug("Updating cookie {CookieName} with {Size} bytes", cookieName, cookieContent.Length);
+            _logger.LogDebug(
+                "[{CorrelationId}] 🍪 Updating cookie {CookieName} with {Size} bytes",
+                correlationId, cookieName, cookieContent.Length);
 
             Result<string> result = await cookiesService.SetCookieContentAsync(cookieName, cookieContent);
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Cookie updated successfully: {CookieName}", cookieName);
-                return Ok(new { name = cookieName, message = result.Value });
+                _logger.LogInformation(
+                    "[{CorrelationId}] ✅ Cookie updated successfully | Cookie: {CookieName}",
+                    correlationId, cookieName);
+                return Ok(new { name = cookieName, message = result.Value, correlationId });
             }
             else
             {
-                _logger.LogWarning("Failed to update cookie: {CookieName}", cookieName);
-                return NotFound(new { error = result.Errors[0].Message });
+                _logger.LogWarning(
+                    "[{CorrelationId}] ⚠️ Failed to update cookie | Cookie: {CookieName}",
+                    correlationId, cookieName);
+                return NotFound(new { error = result.Errors[0].Message, correlationId });
             }
         }
     }
