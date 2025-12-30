@@ -10,5 +10,4 @@ public interface IPathParserService
     /// Gets the cookies folder path from the PathConfiguration.
     /// </summary>
     /// <returns>The full path to the cookies folder.</returns>
-    string GetCookiesFolderPath();
 }
