@@ -6,6 +6,7 @@ using FluentAssertions;
 using ytdlp.Services;
 using ytdlp.Services.Interfaces;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 
 namespace ytdlp.Tests.Services;
 
@@ -49,9 +50,12 @@ public class ConfigsServicesTests
         iOptionsPathConfig ??= pathConfiguration != null
             ? Options.Create(pathConfiguration)
             : Options.Create(paths);
-        pathParserSerivce ??= new PathParserService(iOptionsPathConfig);
 
-        return new ConfigsServices(mockFileSystem, iOptionsPathConfig, pathParserSerivce);
+        var pathParserLoggerMock = new Mock<ILogger<PathParserService>>();
+        var configServicesLoggerMock = new Mock<ILogger<ConfigsServices>>();
+        pathParserSerivce ??= new PathParserService(iOptionsPathConfig, pathParserLoggerMock.Object);
+
+        return new ConfigsServices(mockFileSystem, iOptionsPathConfig, pathParserSerivce, configServicesLoggerMock.Object);
     }
 
     private MockFileSystem CreateMockFileSystemWithConfigs(PathConfiguration paths, Dictionary<string, string> configs)

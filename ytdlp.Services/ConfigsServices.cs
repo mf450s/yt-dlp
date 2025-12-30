@@ -241,7 +241,7 @@ public class ConfigsServices(
         {
             char c = line[i];
 
-            if (c == '"' || c == '\''):
+            if (c == '"' || c == '\'')
             {
                 inQuotes = !inQuotes;
                 currentArg.Append(c);
