@@ -193,25 +193,6 @@ public sealed class DownloadingServiceTests : IDisposable
         _mockProcess.Verify(x => x.Dispose(), Times.Once);
     }
 
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData(null)]
-    public async Task TryDownloadingFromURL_InvalidUrl_ThrowsArgumentException(string invalidUrl)
-    {
-        // Arrange
-        SetupSuccessfulDownload();
-
-
-        // Act & Assert
-        // Note: Currently the service doesn't validate URLs, but this test documents expected behavior
-        // If validation is added, uncomment:
-        // await Assert.ThrowsAsync<ArgumentException>(
-        //     async () => await _sut.TryDownloadingFromURL(invalidUrl, TestConfigFile));
-    }
-
-
     #endregion
 
 
