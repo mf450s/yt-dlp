@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using FluentResults;
 using ytdlp.Services.Interfaces;
 
@@ -18,10 +12,6 @@ namespace ytdlp.Services
         private readonly IPathParserService _pathParserService = pathParserService ?? throw new ArgumentNullException(nameof(pathParserService));
         private readonly string _cookiesFolderPath = string.Empty;
 
-        public CookiesService() : this(new PathParserService())
-        {
-        }
-
         /// <summary>
         /// Retrieves all available cookie file names from the cookies directory.
         /// </summary>
@@ -31,12 +21,9 @@ namespace ytdlp.Services
             {
                 var cookiePath = _pathParserService.GetCookiesFolderPath();
                 if (!Directory.Exists(cookiePath))
-                    return new List<string>();
+                    return [];
 
-                return Directory.GetFiles(cookiePath)
-                    .Select(Path.GetFileName)
-                    .Where(name => !string.IsNullOrEmpty(name))
-                    .ToList();
+                return Directory.GetFiles(cookiePath).ToList();
             }
             catch (Exception ex)
             {
@@ -109,7 +96,7 @@ namespace ytdlp.Services
                 string wholePath = GetWholeCookiePath(cookieName);
 
                 // Ensure directory exists
-                string directory = Path.GetDirectoryName(wholePath);
+                string directory = Path.GetDirectoryName(wholePath)!;
                 if (!Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
