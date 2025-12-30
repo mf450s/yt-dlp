@@ -10,7 +10,6 @@ namespace ytdlp.Services
     public class CookiesService(IPathParserService pathParserService) : ICookiesService
     {
         private readonly IPathParserService _pathParserService = pathParserService ?? throw new ArgumentNullException(nameof(pathParserService));
-        private readonly string _cookiesFolderPath = string.Empty;
 
         /// <summary>
         /// Retrieves all available cookie file names from the cookies directory.
