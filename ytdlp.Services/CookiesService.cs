@@ -1,4 +1,6 @@
 using FluentResults;
+using Microsoft.Extensions.Options;
+using ytdlp.Configs;
 using ytdlp.Services.Interfaces;
 
 namespace ytdlp.Services
@@ -7,9 +9,10 @@ namespace ytdlp.Services
     /// Service for managing cookie files used by yt-dlp.
     /// Supports Netscape format and JSON-based cookie files.
     /// </summary>
-    public class CookiesService(IPathParserService pathParserService) : ICookiesService
+    public class CookiesService(IPathParserService pathParserService, IOptions<PathConfiguration> paths) : ICookiesService
     {
         private readonly IPathParserService _pathParserService = pathParserService ?? throw new ArgumentNullException(nameof(pathParserService));
+        private readonly string cookiePath = paths.Value.Cookies;
 
         /// <summary>
         /// Retrieves all available cookie file names from the cookies directory.
@@ -18,7 +21,6 @@ namespace ytdlp.Services
         {
             try
             {
-                var cookiePath = _pathParserService.GetCookiesFolderPath();
                 if (!Directory.Exists(cookiePath))
                     return [];
 
@@ -152,8 +154,7 @@ namespace ytdlp.Services
         /// </summary>
         public string GetWholeCookiePath(string cookieName)
         {
-            string cookiesFolderPath = _pathParserService.GetCookiesFolderPath();
-            return Path.Combine(cookiesFolderPath, cookieName);
+            return Path.Combine(cookiePath, cookieName);
         }
 
         /// <summary>
