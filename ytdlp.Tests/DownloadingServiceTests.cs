@@ -76,8 +76,7 @@ public sealed class DownloadingServiceTests : IDisposable
     private void SetupMockProcess(
         string standardOutput,
         string standardError,
-        bool startResult = true,
-        int exitCode = 0)
+        bool startResult = true)
     {
         // Reset for test isolation
         _mockStdOut.Reset();
@@ -110,10 +109,6 @@ public sealed class DownloadingServiceTests : IDisposable
         _mockProcess
             .Setup(p => p.WaitForExitAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-
-        _mockProcess
-            .Setup(p => p.ExitCode)
-            .Returns(exitCode);
 
         _mockProcess
             .Setup(p => p.Dispose());
