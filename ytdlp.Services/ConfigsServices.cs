@@ -58,7 +58,7 @@ public class ConfigsServices(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving config names from {ConfigFolder}", configFolder);
-            return new List<string>();
+            return [];
         }
     }
 
