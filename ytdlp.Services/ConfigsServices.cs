@@ -1,9 +1,8 @@
 using ytdlp.Services.Interfaces;
 using System.IO.Abstractions;
 using FluentResults;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using ytdlp.Configs;
 using ytdlp.Services.Logging;
 using System.Text;
 
@@ -11,12 +10,12 @@ namespace ytdlp.Services;
 
 public class ConfigsServices(
     IFileSystem fileSystem,
-    IOptions<PathConfiguration> paths,
+    IConfiguration configuration,
     IPathParserService pathParserService,
     ILogger<ConfigsServices> logger
     ) : IConfigsServices
 {
-    private readonly string configFolder = paths.Value.Config.ToString();
+    private readonly string configFolder = configuration["Paths:Config"] ?? "/app/configs";
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly IPathParserService pathParser = pathParserService;
     private readonly ILogger<ConfigsServices> _logger = logger;
