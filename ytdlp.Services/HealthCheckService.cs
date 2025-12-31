@@ -3,7 +3,6 @@ using ytdlp.Services.Logging;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace ytdlp.Services
 {
