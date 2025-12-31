@@ -62,7 +62,7 @@ namespace ytdlp.Api
         /// Retrieves all available configuration file names.
         /// </summary>
         [HttpGet("config")]
-        public List<string> GetAllConfigNames()
+        public IActionResult GetAllConfigNames()
         {
             var correlationId = HttpContext.TraceIdentifier;
             _logger.LogDebug(
@@ -74,7 +74,7 @@ namespace ytdlp.Api
                 "[{CorrelationId}] 📊 Returning {Count} config names",
                 correlationId, configs.Count);
             
-            return configs;
+            return Ok(configs);
         }
 
         /// <summary>
