@@ -29,8 +29,7 @@ namespace ytdlp.Services
             ILogger<HealthCheckService> logger,
             IDownloadingService downloadingService,
             IConfiguration configuration)
-
-       {
+        {
             _logger = logger;
             _downloadingService = downloadingService;
             _downloadsPath = configuration["Paths:Downloads"] ?? "/app/downloads";
