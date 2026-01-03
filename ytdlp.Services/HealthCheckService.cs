@@ -1,4 +1,3 @@
-using ytdlp.Services.Interfaces;
 using ytdlp.Services.Logging;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -18,21 +17,12 @@ namespace ytdlp.Services
         public Dictionary<string, object> Details { get; set; } = new();
     }
 
-    public class HealthCheckService : IHealthCheckService
+    public class HealthCheckService(
+        ILogger<HealthCheckService> logger,
+        IConfiguration configuration) : IHealthCheckService
     {
-        private readonly ILogger<HealthCheckService> _logger;
-        private readonly IDownloadingService _downloadingService;
-        private readonly string _downloadsPath;
-
-        public HealthCheckService(
-            ILogger<HealthCheckService> logger,
-            IDownloadingService downloadingService,
-            IConfiguration configuration)
-        {
-            _logger = logger;
-            _downloadingService = downloadingService;
-            _downloadsPath = configuration["Paths:Downloads"] ?? "/app/downloads";
-        }
+        private readonly ILogger<HealthCheckService> _logger = logger;
+        private readonly string _downloadsPath = configuration["Paths:Downloads"] ?? "/app/downloads";
 
         public async Task<HealthStatus> CheckHealthAsync(CancellationToken cancellationToken = default)
         {
@@ -98,31 +88,29 @@ namespace ytdlp.Services
                     CreateNoWindow = true
                 };
 
-                using (var process = new Process { StartInfo = processInfo })
+                using var process = new Process { StartInfo = processInfo };
+                process.Start();
+
+                var versionTask = process.StandardOutput.ReadLineAsync();
+                var completedTask = await Task.WhenAny(
+                    versionTask,
+                    Task.Delay(5000, cancellationToken) // 5 second timeout
+                );
+
+                if (completedTask == versionTask && !string.IsNullOrEmpty(await versionTask))
                 {
-                    process.Start();
-
-                    var versionTask = process.StandardOutput.ReadLineAsync();
-                    var completedTask = await Task.WhenAny(
-                        versionTask,
-                        Task.Delay(5000, cancellationToken) // 5 second timeout
-                    );
-
-                    if (completedTask == versionTask && !string.IsNullOrEmpty(await versionTask))
-                    {
-                        process.Kill();
-                        _logger.LogInformation("✅ yt-dlp is available");
-                        return true;
-                    }
-
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                    }
-
-                    _logger.LogWarning("⚠️ yt-dlp check timed out or returned no output");
-                    return false;
+                    process.Kill();
+                    _logger.LogInformation("✅ yt-dlp is available");
+                    return true;
                 }
+
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                }
+
+                _logger.LogWarning("⚠️ yt-dlp check timed out or returned no output");
+                return false;
             }
             catch (Exception ex)
             {
