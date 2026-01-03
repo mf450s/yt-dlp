@@ -217,23 +217,15 @@ services:
     volumes:
       - downloads:/app/downloads
       - archive:/app/archive
-      - config:/app/config
+      - configs:/app/configs
+      - cookies:/app/cookies
     restart: unless-stopped
 
 volumes:
   downloads:
   archive:
-  config:
-```
-
-**Starten:**
-```bash
-docker-compose up -d
-```
-
-**Logs:**
-```bash
-docker-compose logs -f yt-dlp-api
+  configs:
+  cookies:
 ```
 
 ### Dockerfile
@@ -266,21 +258,6 @@ src/
 └── Program.cs
 ```
 
-### Code-Standards
-
-- **Dependency Injection**: Alle Services werden über DI injiziert
-- **SOLID-Prinzipien**: Single Responsibility, Open/Closed, etc.
-- **Async/Await**: Vollständig asynchrone API-Operationen
-- **Null-Safety**: Nullable reference types aktiviert
-- **Logging**: Strukturiertes Logging mit ILogger
-
-### Testing
-
-Tests werden mit **xUnit** und **Moq** geschrieben:
-
-```bash
-dotnet test
-```
 
 ### Building & Deployment
 
@@ -295,15 +272,3 @@ dotnet publish -c Release -o ./publish
 docker build -t ghcr.io/mf450s/yt-dlp-api:latest .
 docker push ghcr.io/mf450s/yt-dlp-api:latest
 ```
-
----
-
-## 📝 Lizenz
-
-Dieses Projekt unterliegt den gleichen Lizenzen wie yt-dlp.
-
----
-
-## 🤝 Kontakt
-
-Entwickelt von Tom (Fachinformatiker Azubi bei Trilux Digital Solutions)
