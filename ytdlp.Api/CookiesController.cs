@@ -59,7 +59,7 @@ namespace ytdlp.Api
                 "[{CorrelationId}] 🍪 Returning cookie content | Cookie: {CookieName} | Size: {Size} bytes",
                 correlationId, cookieName, cookieContent.Value.Length);
             
-            return Ok(new { name = cookieName, content = cookieContent.Value });
+            return Ok(cookieContent.Value);
         }
 
         /// <summary>
