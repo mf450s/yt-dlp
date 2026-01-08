@@ -30,7 +30,6 @@ namespace ytdlp.Tests
             
             _healthCheckService = new HealthCheckService(
                 _mockLogger.Object, 
-                _mockDownloadingService.Object,
                 _mockConfiguration.Object);
         }
 
