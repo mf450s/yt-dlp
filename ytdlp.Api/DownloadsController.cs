@@ -6,11 +6,12 @@ namespace ytdlp.Api
     [Route("api/[controller]")]
     [ApiController]
     public class DownloadsController(
-        IDownloadingService downloadingService,
         IConfigsServices configsServices,
-        ILogger<DownloadsController> logger
+        ILogger<DownloadsController> logger,
+        IServiceScopeFactory scopeFactory
         ) : ControllerBase
     {
+        private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
         private readonly ILogger<DownloadsController> _logger = logger;
 
         /// <summary>
@@ -37,22 +38,40 @@ namespace ytdlp.Api
                 return BadRequest(new { error = $"Configuration '{confName}' not found.", correlationId });
             }
 
-            try
+            // Fire-and-Forget
+            _ = Task.Run(async () =>
             {
-                await downloadingService.TryDownloadingFromURL(url, confName);
-                _logger.LogInformation(
-                    "[{CorrelationId}] ✅ Download accepted and queued | URL: {Url} | Config: {ConfigName}",
-                    correlationId, url, confName);
-                return Accepted(new { message = "Download started", url, config = confName, correlationId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "[{CorrelationId}] 🚨 Error starting download | URL: {Url} | Config: {ConfigName}",
-                    correlationId, url, confName);
-                return StatusCode(500, new { error = $"An error occurred while starting the download: {ex.Message}", correlationId });
-            }
+                // new scope for background work
+                using var scope = _scopeFactory.CreateScope();
+                try
+                {
+                    var backgroundDownloadingService = scope.ServiceProvider.GetRequiredService<IDownloadingService>();
+
+                    _logger.LogInformation(
+                        "[{CorrelationId}] ▶️ Background download starting | URL: {Url}",
+                        correlationId, url);
+
+                    await backgroundDownloadingService.TryDownloadingFromURL(url, confName);
+
+                    _logger.LogInformation(
+                        "[{CorrelationId}] ✅ Background download finished | URL: {Url}",
+                        correlationId, url);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "[{CorrelationId}] 🚨 Error during background download | URL: {Url} | Config: {ConfigName}",
+                        correlationId, url, confName);
+                }
+            });
+
+            // Immediate accepted response
+            _logger.LogInformation(
+                "[{CorrelationId}] 🚀 Download accepted and queued (processing in background)",
+                correlationId);
+
+            return Accepted(new { message = "Download started in background", url, config = confName, correlationId });
         }
     }
 }
