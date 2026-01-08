@@ -7,12 +7,12 @@ namespace ytdlp.Api
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CredentialManagementController(
+    public class CredentialsController(
         ICredentialService credentialManagerService,
-        ILogger<CredentialManagementController> logger
+        ILogger<CredentialsController> logger
         ) : ControllerBase
     {
-        private readonly ILogger<CredentialManagementController> _logger = logger;
+        private readonly ILogger<CredentialsController> _logger = logger;
 
         /// <summary>
         /// Retrieves all available credential file names.
