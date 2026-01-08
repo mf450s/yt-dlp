@@ -47,7 +47,7 @@ public class ConfigsServicesTests
         IPathParserService? pathParserService = null)
     {
         mockFileSystem ??= new MockFileSystem();
-        
+
         var configMock = new Mock<IConfiguration>();
         configMock.Setup(c => c["Paths:Config"]).Returns(configPath);
         configMock.Setup(c => c["Paths:Downloads"]).Returns(downloadsPath);

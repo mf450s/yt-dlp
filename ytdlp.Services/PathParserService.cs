@@ -89,7 +89,7 @@ public class PathParserService(
             template = $"{folder}{template}";
             _logger.LogDebug("📖 Prepended folder {Folder} to path: {Template}", folder, template);
         }
-        
+
         return $"{parts[0]} \"{template}\"";
     }
 }
