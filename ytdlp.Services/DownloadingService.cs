@@ -20,7 +20,7 @@ namespace ytdlp.Services
             var stopwatch = Stopwatch.StartNew();
             bool isSpotify = IsSpotifyUrl(url);
             string toolName = isSpotify ? "Zotify" : "yt-dlp";
-            
+
             _logger.LogDownloadStarted(url, configFile);
 
             try
@@ -74,8 +74,8 @@ namespace ytdlp.Services
         /// <returns>True if the URL is a Spotify URL, false otherwise.</returns>
         private static bool IsSpotifyUrl(string url)
         {
-            return !string.IsNullOrWhiteSpace(url) && 
-                   (url.Contains("spotify.com", StringComparison.OrdinalIgnoreCase) || 
+            return !string.IsNullOrWhiteSpace(url) &&
+                   (url.Contains("spotify.com", StringComparison.OrdinalIgnoreCase) ||
                     url.Contains("open.spotify.com", StringComparison.OrdinalIgnoreCase));
         }
 
@@ -87,7 +87,7 @@ namespace ytdlp.Services
         /// <param name="wholeConfigPath">The path to the configuration file.</param>
         /// <param name="isSpotify">Whether the URL is a Spotify URL.</param>
         /// <returns>A <see cref="ProcessStartInfo"/> object configured to run the appropriate tool.</returns>
-        internal async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath, bool isSpotify = false)
+        internal static async Task<ProcessStartInfo> GetProcessStartInfoAsync(string url, string wholeConfigPath, bool isSpotify = false)
         {
             if (isSpotify)
             {

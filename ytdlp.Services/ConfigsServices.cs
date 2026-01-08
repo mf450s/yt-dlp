@@ -29,7 +29,7 @@ public class ConfigsServices(
     public string GetWholeConfigPath(string configName)
     {
         // If config name already includes .json or .conf, use it as-is
-        if (configName.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || 
+        if (configName.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
             configName.EndsWith(".conf", StringComparison.OrdinalIgnoreCase))
         {
             string path = Path.Combine(configFolder, configName);
@@ -85,9 +85,9 @@ public class ConfigsServices(
     public Result<string> GetConfigContentByName(string name)
     {
         _logger.LogDebug("Retrieving config content for: {ConfigName}", name);
-        
+
         // If name has extension, use it directly
-        if (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || 
+        if (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
             name.EndsWith(".conf", StringComparison.OrdinalIgnoreCase))
         {
             return ReadConfigFile(name);
@@ -134,9 +134,9 @@ public class ConfigsServices(
     public Result<string> DeleteConfigByName(string name)
     {
         _logger.LogInformation("Attempting to delete config: {ConfigName}", name);
-        
+
         // If name has extension, use it directly
-        if (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || 
+        if (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
             name.EndsWith(".conf", StringComparison.OrdinalIgnoreCase))
         {
             return DeleteConfigFile(name);
@@ -297,7 +297,7 @@ public class ConfigsServices(
         {
             char c = line[i];
 
-            if (c == '"' || c == '\')
+            if (c == '"' || c == '\\')
             {
                 inQuotes = !inQuotes;
                 currentArg.Append(c);
