@@ -59,7 +59,7 @@ namespace ytdlp.Api
                 "[{CorrelationId}] 🍪 Returning cookie content | Cookie: {CookieName} | Size: {Size} bytes",
                 correlationId, cookieName, cookieContent.Value.Length);
             
-            return Ok(new { name = cookieName, content = cookieContent.Value });
+            return Ok(cookieContent.Value);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace ytdlp.Api
                 _logger.LogInformation(
                     "[{CorrelationId}] ✅ Cookie created successfully | Cookie: {CookieName}",
                     correlationId, cookieName);
-                return Created($"api/cookies/{cookieName}", new { name = cookieName, message = result.Value, correlationId });
+                return Created(cookieName, new { name = cookieName, message = result.Value, correlationId });
             }
             else
             {
