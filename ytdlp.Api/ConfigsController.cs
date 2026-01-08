@@ -9,10 +9,10 @@ namespace ytdlp.Api
     [ApiController]
     public class ConfigsController(
         IConfigsServices configsServices,
-        ILogger<ytdlpController> logger
+        ILogger<DownloadsController> logger
         ) : ControllerBase
     {
-        private readonly ILogger<ytdlpController> _logger = logger;
+        private readonly ILogger<DownloadsController> _logger = logger;
         /// <summary>
         /// Retrieves all available configuration file names.
         /// </summary>

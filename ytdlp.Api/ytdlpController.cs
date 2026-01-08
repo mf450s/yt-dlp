@@ -5,13 +5,13 @@ namespace ytdlp.Api
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ytdlpController(
+    public class DownloadsController(
         IDownloadingService downloadingService, 
         IConfigsServices configsServices,
-        ILogger<ytdlpController> logger
+        ILogger<DownloadsController> logger
         ) : ControllerBase
     {
-        private readonly ILogger<ytdlpController> _logger = logger;
+        private readonly ILogger<DownloadsController> _logger = logger;
 
         /// <summary>
         /// Downloads content from a URL using a specified configuration.
