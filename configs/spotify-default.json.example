@@ -1,0 +1,23 @@
+{
+  "ROOT_PATH": "/app/downloads/music",
+  "DOWNLOAD_FORMAT": "mp3",
+  "DOWNLOAD_QUALITY": "high",
+  "TRANSCODE_BITRATE": "320",
+  "SKIP_EXISTING_FILES": true,
+  "SKIP_PREVIOUSLY_DOWNLOADED": false,
+  "DOWNLOAD_REAL_TIME": false,
+  "RETRY_ATTEMPTS": 3,
+  "BULK_WAIT_TIME": 1,
+  "OVERRIDE_AUTO_WAIT": false,
+  "CHUNK_SIZE": 20000,
+  "OUTPUT": "{artist}/{album}/{album_num} - {artist} - {song_name}.{ext}",
+  "DOWNLOAD_LYRICS": true,
+  "MD_ALLGENRES": false,
+  "SPLIT_ALBUM_DISCS": false,
+  "LANGUAGE": "en",
+  "PRINT_SPLASH": false,
+  "PRINT_SKIPS": true,
+  "PRINT_DOWNLOAD_PROGRESS": true,
+  "PRINT_ERRORS": true,
+  "PRINT_DOWNLOADS": false
+}
