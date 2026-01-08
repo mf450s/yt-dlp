@@ -10,12 +10,10 @@ namespace ytdlp.Services
     /// Supports Netscape format and JSON-based cookie files.
     /// </summary>
     public class CookiesService(
-        IPathParserService pathParserService, 
         IConfiguration configuration,
         ILogger<CookiesService> logger
         ) : ICookiesService
     {
-        private readonly IPathParserService _pathParserService = pathParserService ?? throw new ArgumentNullException(nameof(pathParserService));
         private readonly string cookiePath = configuration["Paths:Cookies"] ?? "/app/cookies";
         private readonly ILogger<CookiesService> _logger = logger;
 
@@ -25,7 +23,7 @@ namespace ytdlp.Services
         public List<string> GetAllCookieNames()
         {
             _logger.LogDebug("Retrieving all cookie names from: {CookiePath}", cookiePath);
-            
+
             try
             {
                 if (!Directory.Exists(cookiePath))
@@ -41,7 +39,7 @@ namespace ytdlp.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving cookie names from {CookiePath}", cookiePath);
-                return new List<string>();
+                return [];
             }
         }
 
@@ -51,7 +49,7 @@ namespace ytdlp.Services
         public Result<string> GetCookieContentByName(string cookieName)
         {
             _logger.LogDebug("Retrieving cookie content for: {CookieName}", cookieName);
-            
+
             if (string.IsNullOrWhiteSpace(cookieName))
             {
                 _logger.LogWarning("GetCookieContentByName called with empty cookie name");
@@ -85,7 +83,7 @@ namespace ytdlp.Services
         public Result<string> DeleteCookieByName(string cookieName)
         {
             _logger.LogInformation("Attempting to delete cookie: {CookieName}", cookieName);
-            
+
             if (string.IsNullOrWhiteSpace(cookieName))
             {
                 _logger.LogWarning("DeleteCookieByName called with empty cookie name");
@@ -119,7 +117,7 @@ namespace ytdlp.Services
         public async Task<Result<string>> CreateNewCookieAsync(string cookieName, string cookieContent)
         {
             _logger.LogInformation("Creating new cookie file: {CookieName}", cookieName);
-            
+
             if (string.IsNullOrWhiteSpace(cookieName))
             {
                 _logger.LogWarning("CreateNewCookieAsync called with empty cookie name");
@@ -175,7 +173,7 @@ namespace ytdlp.Services
         public async Task<Result<string>> SetCookieContentAsync(string cookieName, string cookieContent)
         {
             _logger.LogInformation("Updating cookie file: {CookieName}", cookieName);
-            
+
             if (string.IsNullOrWhiteSpace(cookieName))
             {
                 _logger.LogWarning("SetCookieContentAsync called with empty cookie name");
