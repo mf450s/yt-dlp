@@ -356,9 +356,6 @@ public sealed class DownloadingServiceTests : IDisposable
     public async Task GetProcessStartInfoAsync_WithEdgeCases_HandlesCorrectly(string? url, bool expectedIsSpotify)
     {
         // Arrange
-        if (string.IsNullOrEmpty(url))
-            return; // Skip null/empty tests
-
         string configPath = "/app/configs/test.conf";
 
         // Act
