@@ -19,17 +19,17 @@ namespace ytdlp.Services
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogDownloadStarted(url, configFile);
-            
+
             try
             {
                 string wholeConfigPath = _configsServices.GetWholeConfigPath(configFile);
                 _logger.LogConfigPathResolved(configFile, wholeConfigPath);
-                
+
                 ProcessStartInfo startInfo = await GetProcessStartInfoAsync(url, wholeConfigPath);
-                
+
                 using IProcess process = _processFactory.CreateProcess();
                 process.StartInfo = startInfo;
-                
+
                 _logger.LogProcessStarted("yt-dlp", startInfo.Arguments);
                 process.Start();
 
@@ -57,9 +57,9 @@ namespace ytdlp.Services
             {
                 stopwatch.Stop();
                 _logger.LogError(
-                    ex, 
-                    "🚨 Exception during download | URL: {Url} | Config: {ConfigFile} | Duration: {DurationMs}ms", 
-                    url, configFile, (long)stopwatch.ElapsedMilliseconds);
+                    ex,
+                    "🚨 Exception during download | URL: {Url} | Config: {ConfigFile} | Duration: {DurationMs}ms",
+                    url, configFile, stopwatch.ElapsedMilliseconds);
                 throw;
             }
         }

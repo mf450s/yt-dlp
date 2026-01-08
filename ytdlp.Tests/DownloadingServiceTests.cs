@@ -5,9 +5,7 @@ using Moq;
 using ytdlp.Services;
 using ytdlp.Services.Interfaces;
 
-
 namespace ytdlp.Tests;
-
 
 /// <summary>
 /// Unit tests for <see cref="DownloadingService"/>.
@@ -46,7 +44,7 @@ public sealed class DownloadingServiceTests : IDisposable
 
 
         _sut = new DownloadingService(
-            _mockConfigsService.Object, 
+            _mockConfigsService.Object,
             _mockLogger.Object,
             _mockProcessFactory.Object);
     }
@@ -290,7 +288,7 @@ public sealed class DownloadingServiceTests : IDisposable
     private void SetupSuccessfulDownload(string? configPath = null)
     {
         configPath ??= TestConfigPath;
-        
+
         _mockConfigsService
             .Setup(x => x.GetWholeConfigPath(TestConfigFile))
             .Returns(configPath);

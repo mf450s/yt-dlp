@@ -6,7 +6,7 @@ namespace ytdlp.Api
     [Route("api/[controller]")]
     [ApiController]
     public class DownloadsController(
-        IDownloadingService downloadingService, 
+        IDownloadingService downloadingService,
         IConfigsServices configsServices,
         ILogger<DownloadsController> logger
         ) : ControllerBase
@@ -26,7 +26,7 @@ namespace ytdlp.Api
             _logger.LogInformation(
                 "[{CorrelationId}] ⬇️ Download request received | URL: {Url} | Config: {ConfigName}",
                 correlationId, url, confName);
-            
+
             // Validate configuration file exists
             var configResult = configsServices.GetConfigContentByName(confName);
             if (configResult.IsFailed)
@@ -43,7 +43,7 @@ namespace ytdlp.Api
                 _logger.LogInformation(
                     "[{CorrelationId}] ✅ Download accepted and queued | URL: {Url} | Config: {ConfigName}",
                     correlationId, url, confName);
-                return Accepted(new { message = "Download started", url = url, config = confName, correlationId });
+                return Accepted(new { message = "Download started", url, config = confName, correlationId });
             }
             catch (Exception ex)
             {

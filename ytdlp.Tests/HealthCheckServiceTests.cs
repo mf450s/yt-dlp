@@ -19,16 +19,16 @@ namespace ytdlp.Tests
         {
             _mockLogger = new Mock<ILogger<HealthCheckService>>();
             _mockDownloadingService = new Mock<IDownloadingService>();
-            
+
             // Setup Configuration mock with default test paths
             _mockConfiguration = new Mock<IConfiguration>();
             _mockConfiguration.Setup(c => c["Paths:Downloads"]).Returns("./downloads");
             _mockConfiguration.Setup(c => c["Paths:Archive"]).Returns("./archive");
             _mockConfiguration.Setup(c => c["Paths:Config"]).Returns("./configs");
             _mockConfiguration.Setup(c => c["Paths:Cookies"]).Returns("./cookies");
-            
+
             _healthCheckService = new HealthCheckService(
-                _mockLogger.Object, 
+                _mockLogger.Object,
                 _mockConfiguration.Object);
         }
 

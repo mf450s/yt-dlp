@@ -39,7 +39,7 @@ public class ConfigsServices(
     public List<string> GetAllConfigNames()
     {
         _logger.LogDebug("Retrieving all config names from: {ConfigFolder}", configFolder);
-        
+
         try
         {
             var files = _fileSystem.Directory.GetFiles(configFolder, "*.conf");
@@ -71,7 +71,7 @@ public class ConfigsServices(
     {
         _logger.LogDebug("Retrieving config content for: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
-        
+
         if (_fileSystem.File.Exists(path))
         {
             try
@@ -98,7 +98,7 @@ public class ConfigsServices(
     {
         _logger.LogInformation("Attempting to delete config: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
-        
+
         if (_fileSystem.File.Exists(path))
         {
             try
@@ -130,7 +130,7 @@ public class ConfigsServices(
     {
         _logger.LogInformation("Creating new config: {ConfigName}", name);
         string newPath = GetWholeConfigPath(name);
-        
+
         if (_fileSystem.File.Exists(newPath))
         {
             _logger.LogWarning("Cannot create config - file already exists: {ConfigName}", name);
@@ -156,7 +156,7 @@ public class ConfigsServices(
     {
         _logger.LogInformation("Updating config: {ConfigName}", name);
         string path = GetWholeConfigPath(name);
-        
+
         if (_fileSystem.File.Exists(path))
         {
             try

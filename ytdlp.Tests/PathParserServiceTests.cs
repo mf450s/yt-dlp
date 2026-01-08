@@ -10,7 +10,7 @@ namespace ytdlp.Tests.Services;
 public class PathParserServiceTests
 {
     #region Setup
-    public PathParserService GetPathParserService(
+    public static PathParserService GetPathParserService(
         string downloads = "/app/downloads/",
         string archive = "/app/archive/",
         string cookies = "/app/cookies"
@@ -22,7 +22,7 @@ public class PathParserServiceTests
         configMock.Setup(c => c["Paths:Cookies"]).Returns(cookies);
 
         var loggerMock = new Mock<ILogger<PathParserService>>();
-        
+
         return new PathParserService(configMock.Object, loggerMock.Object);
     }
     #endregion

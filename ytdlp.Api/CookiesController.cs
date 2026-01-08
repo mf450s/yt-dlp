@@ -24,12 +24,12 @@ namespace ytdlp.Api
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 GetAllCookieNames request received",
                 correlationId);
-            
+
             var cookies = cookiesService.GetAllCookieNames();
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 Returning {Count} cookie files",
                 correlationId, cookies.Count);
-            
+
             return cookies;
         }
 
@@ -44,7 +44,7 @@ namespace ytdlp.Api
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 GetCookieContentByName request | Cookie: {CookieName}",
                 correlationId, cookieName);
-            
+
             Result<string> cookieContent = cookiesService.GetCookieContentByName(cookieName);
             if (cookieContent.IsFailed)
             {
@@ -53,11 +53,11 @@ namespace ytdlp.Api
                     correlationId, cookieName);
                 return NotFound(new { error = cookieContent.Errors[0].Message, correlationId });
             }
-            
+
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 Returning cookie content | Cookie: {CookieName} | Size: {Size} bytes",
                 correlationId, cookieName, cookieContent.Value.Length);
-            
+
             return Ok(cookieContent.Value);
         }
 
@@ -72,7 +72,7 @@ namespace ytdlp.Api
             _logger.LogInformation(
                 "[{CorrelationId}] 🗑️ DeleteCookieByName request | Cookie: {CookieName}",
                 correlationId, cookieName);
-            
+
             Result<string> result = cookiesService.DeleteCookieByName(cookieName);
             if (result.IsSuccess)
             {
@@ -102,10 +102,10 @@ namespace ytdlp.Api
             _logger.LogInformation(
                 "[{CorrelationId}] 🍪 CreateNewCookie request | Cookie: {CookieName}",
                 correlationId, cookieName);
-            
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string cookieContent = await reader.ReadToEndAsync();
-            
+
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 Creating cookie {CookieName} with {Size} bytes",
                 correlationId, cookieName, cookieContent.Length);
@@ -138,10 +138,10 @@ namespace ytdlp.Api
             _logger.LogInformation(
                 "[{CorrelationId}] 🍪 SetCookieContent request | Cookie: {CookieName}",
                 correlationId, cookieName);
-            
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string cookieContent = await reader.ReadToEndAsync();
-            
+
             _logger.LogDebug(
                 "[{CorrelationId}] 🍪 Updating cookie {CookieName} with {Size} bytes",
                 correlationId, cookieName, cookieContent.Length);
