@@ -67,8 +67,5 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 
 EXPOSE 8080
 
-HEALTHCHECK --start-period=40s \
-    CMD curl -f http://localhost:8080/api/healthcheck/ready || exit 1
-
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["dotnet", "ytdlp.Api.dll"]
